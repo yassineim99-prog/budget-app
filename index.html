@@ -1,0 +1,955 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0f766e">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Budget">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icon.svg">
+<title>Budget</title>
+<style>
+:root{
+  --bg:#f4f6f5; --card:#ffffff; --text:#14201d; --muted:#61716c; --line:#e1e7e5;
+  --accent:#0f766e; --accent-soft:#d6efec; --neg:#c2410c; --pos:#15803d;
+  --fixed:#0f766e; --var:#d97706; --save:#6d28d9; --left:#a3b5b0;
+  --shadow:0 1px 2px rgba(0,0,0,.05),0 2px 10px rgba(0,0,0,.04); --r:14px;
+}
+@media (prefers-color-scheme:dark){:root{
+  --bg:#0d1312; --card:#161f1d; --text:#e7efed; --muted:#93a59f; --line:#26332f;
+  --accent:#2dd4bf; --accent-soft:#123a35; --neg:#fb923c; --pos:#4ade80;
+  --fixed:#2dd4bf; --var:#fbbf24; --save:#a78bfa; --left:#3b4c47; --shadow:none;
+}}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--text);font:15px/1.4 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;-webkit-tap-highlight-color:transparent}
+button,input,select,textarea{font:inherit;color:inherit}
+header{position:sticky;top:0;z-index:5;background:var(--bg);padding:calc(env(safe-area-inset-top) + 10px) 16px 8px;display:flex;align-items:center;gap:8px;max-width:760px;margin:0 auto}
+header .month{flex:1;text-align:center;font-weight:650;font-size:17px}
+header .month small{display:block;font-weight:400;font-size:12px;color:var(--muted)}
+.iconbtn{border:0;background:var(--card);box-shadow:var(--shadow);width:38px;height:38px;border-radius:50%;cursor:pointer;font-size:18px;display:grid;place-items:center;border:1px solid var(--line)}
+main{max-width:760px;margin:0 auto;padding:4px 16px calc(150px + env(safe-area-inset-bottom))}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow);padding:16px;margin-bottom:12px}
+.card h3{margin:0 0 10px;font-size:14px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.04em;display:flex;justify-content:space-between;align-items:center}
+.muted{color:var(--muted)} .small{font-size:12.5px}
+.big{font-size:34px;font-weight:700;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+.neg{color:var(--neg)} .pos{color:var(--pos)}
+.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:12px}
+@media(min-width:600px){.grid.g4{grid-template-columns:repeat(4,1fr)}}
+.tile{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:12px;box-shadow:var(--shadow)}
+.tile .lbl{font-size:12.5px;color:var(--muted);display:flex;align-items:center;gap:6px}
+.tile .val{font-size:19px;font-weight:650;font-variant-numeric:tabular-nums;margin-top:2px}
+.dot{width:9px;height:9px;border-radius:50%;display:inline-block;flex:none}
+.stack{display:flex;height:12px;border-radius:99px;overflow:hidden;background:var(--line);margin:14px 0 8px;gap:2px}
+.stack>div{height:100%}
+.legend{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:12.5px;color:var(--muted)}
+.legend span{display:inline-flex;align-items:center;gap:5px}
+.bar{height:8px;border-radius:99px;background:var(--line);overflow:hidden;margin-top:6px}
+.bar>div{height:100%;background:var(--accent);border-radius:99px}
+.bar.over>div{background:var(--neg)}
+.catrow{padding:8px 0;border-top:1px solid var(--line)} .catrow:first-of-type{border-top:0}
+.catrow .top{display:flex;justify-content:space-between;gap:8px}
+.num{font-variant-numeric:tabular-nums;white-space:nowrap}
+ul.list{list-style:none;margin:0;padding:0}
+.row{display:flex;align-items:center;gap:12px;padding:10px 4px;border-top:1px solid var(--line);cursor:pointer;border-radius:8px}
+.row:first-child{border-top:0}
+.row:hover{background:var(--accent-soft)}
+.ico{width:38px;height:38px;border-radius:11px;display:grid;place-items:center;font-weight:700;flex:none;background:var(--accent-soft);color:var(--accent);font-size:14px}
+.row .main{flex:1;min-width:0}
+.row .title{font-weight:560;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.row .sub{font-size:12.5px;color:var(--muted);display:flex;flex-wrap:wrap;gap:4px 6px;align-items:center;margin-top:2px}
+.row .amt{text-align:right;font-weight:600}
+.row .amt .sub{justify-content:flex-end;font-weight:400}
+.badge{font-size:11px;padding:1px 7px;border-radius:99px;background:var(--line);color:var(--muted);white-space:nowrap}
+.badge.fixed{background:color-mix(in srgb,var(--fixed) 18%,transparent);color:var(--fixed)}
+.badge.var{background:color-mix(in srgb,var(--var) 20%,transparent);color:var(--var)}
+.badge.joint{background:color-mix(in srgb,var(--save) 18%,transparent);color:var(--save)}
+.chips{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;margin-bottom:10px;scrollbar-width:none}
+.chip{border:1px solid var(--line);background:var(--card);border-radius:99px;padding:6px 12px;cursor:pointer;white-space:nowrap;font-size:13.5px}
+.chip.on{background:var(--accent);color:#fff;border-color:var(--accent)}
+@media (prefers-color-scheme:dark){.chip.on{color:#05201d}}
+.seg{display:flex;background:var(--line);border-radius:10px;padding:3px;gap:3px;margin-bottom:12px}
+.seg button{flex:1;border:0;background:transparent;padding:7px;border-radius:8px;cursor:pointer;font-size:13.5px;color:var(--muted)}
+.seg button.on{background:var(--card);color:var(--text);box-shadow:var(--shadow);font-weight:600}
+.section-h{display:flex;justify-content:space-between;align-items:baseline;margin:16px 4px 6px;font-weight:650}
+.empty{text-align:center;color:var(--muted);padding:26px 10px}
+nav.tabs{position:fixed;bottom:0;left:0;right:0;z-index:6;background:var(--card);border-top:1px solid var(--line);display:flex;justify-content:center;padding-bottom:env(safe-area-inset-bottom)}
+nav.tabs .in{display:flex;max-width:760px;width:100%}
+nav.tabs button{flex:1;border:0;background:none;padding:8px 2px 9px;cursor:pointer;color:var(--muted);font-size:11.5px;display:flex;flex-direction:column;align-items:center;gap:2px}
+nav.tabs button .i{font-size:20px;line-height:1}
+nav.tabs button.on{color:var(--accent);font-weight:600}
+.fab{position:fixed;right:max(16px,calc(50vw - 364px));bottom:calc(72px + env(safe-area-inset-bottom));z-index:6;border:0;border-radius:99px;background:var(--accent);color:#fff;padding:13px 20px;font-weight:650;box-shadow:0 6px 18px rgba(0,0,0,.2);cursor:pointer}
+@media (prefers-color-scheme:dark){.fab{color:#05201d}}
+dialog{border:0;border-radius:18px;padding:0;width:min(520px,calc(100vw - 24px));max-height:calc(100vh - 40px);background:var(--card);color:var(--text);box-shadow:0 20px 60px rgba(0,0,0,.35)}
+dialog::backdrop{background:rgba(0,0,0,.45)}
+dialog form{padding:18px}
+dialog h2{margin:0 0 14px;font-size:18px}
+label.f{display:block;margin-bottom:12px;font-size:13px;color:var(--muted)}
+label.f>input,label.f>select,label.f>textarea{display:block;width:100%;margin-top:4px;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--bg);font-size:16px;color:var(--text)}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.check{display:flex;align-items:center;gap:10px;margin:4px 0 12px;cursor:pointer}
+.check input{width:20px;height:20px;accent-color:var(--accent)}
+.splitbox{border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin-bottom:12px}
+.splitrow{display:flex;align-items:center;gap:10px;padding:4px 0}
+.splitrow label{flex:1;display:flex;gap:10px;align-items:center;cursor:pointer}
+.splitrow input[type=number]{width:70px;padding:6px 8px;border:1px solid var(--line);border-radius:8px;background:var(--bg)}
+.splitrow .pv{width:80px;text-align:right;font-size:12.5px;color:var(--muted)}
+.actions{display:flex;flex-wrap:wrap;gap:8px;justify-content:flex-end;margin-top:8px}
+.btn{border:1px solid var(--line);background:var(--card);padding:10px 16px;border-radius:10px;cursor:pointer;font-weight:550}
+.btn.primary{background:var(--accent);color:#fff;border-color:var(--accent)}
+@media (prefers-color-scheme:dark){.btn.primary{color:#05201d}}
+.btn.danger{color:var(--neg)}
+.btn.sm{padding:6px 11px;font-size:13px}
+.spacer{flex:1}
+.months{display:flex;align-items:flex-end;gap:8px;height:120px;margin-top:6px}
+.months .m{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;height:100%;cursor:pointer}
+.months .bars{flex:1;display:flex;align-items:flex-end;gap:3px;width:100%;justify-content:center}
+.months .bars div{width:40%;max-width:16px;border-radius:4px 4px 0 0;min-height:2px}
+.months .m.cur span{color:var(--text);font-weight:650}
+.months span{font-size:11.5px;color:var(--muted)}
+.goal{padding:10px 0;border-top:1px solid var(--line)} .goal:first-of-type{border-top:0}
+.goal .top{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.goal .bar{height:10px}
+.goal .bar>div{background:var(--save)}
+.person{display:flex;align-items:center;gap:12px;padding:10px 0;border-top:1px solid var(--line)}
+.person:first-of-type{border-top:0}
+.avatar{width:38px;height:38px;border-radius:50%;display:grid;place-items:center;font-weight:700;color:#fff;flex:none}
+table.t{width:100%;border-collapse:collapse;font-size:13.5px}
+table.t th,table.t td{text-align:right;padding:6px 4px;border-top:1px solid var(--line)}
+table.t th:first-child,table.t td:first-child{text-align:left}
+table.t th{color:var(--muted);font-weight:500;border-top:0;white-space:nowrap}
+table.t td{vertical-align:top}
+table.t tr[data-act]:hover td{background:var(--accent-soft)}
+.catedit{display:flex;gap:8px;align-items:center;padding:6px 0}
+.catedit input{padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--bg);min-width:0}
+.catedit input.n{flex:1} .catedit input.l{width:100px}
+a{color:var(--accent)}
+.row .main .title::after{content:" ✎";opacity:.35;font-size:12px}
+.syncdot{width:8px;height:8px;border-radius:50%;display:inline-block;margin-right:5px;vertical-align:middle}
+</style>
+</head>
+<body>
+<header>
+  <button class="iconbtn" data-act="prev-month" aria-label="Previous month">‹</button>
+  <div class="month" id="monthLabel"></div>
+  <button class="iconbtn" data-act="next-month" aria-label="Next month">›</button>
+</header>
+<main id="view"></main>
+<button class="fab" id="fab" data-act="fab"></button>
+<nav class="tabs"><div class="in">
+  <button data-tab="overview"><span class="i">▤</span>Overview</button>
+  <button data-tab="spending"><span class="i">⇣</span>Spending</button>
+  <button data-tab="income"><span class="i">⇡</span>Income</button>
+  <button data-tab="goals"><span class="i">◎</span>Goals</button>
+  <button data-tab="people"><span class="i">☺</span>People</button>
+  <button data-tab="settings"><span class="i">⚙</span>Settings</button>
+</div></nav>
+<dialog id="modal"><form id="mform" novalidate><h2 id="mtitle"></h2><div id="mbody"></div><div class="actions" id="mactions"></div></form></dialog>
+
+<script>
+"use strict";
+/* ---------- helpers ---------- */
+const KEY = 'budget-app-v1';
+const $ = (s, r = document) => r.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const uid = () => Math.random().toString(36).slice(2, 9) + Date.now().toString(36).slice(-4);
+const pad = n => String(n).padStart(2, '0');
+const todayISO = () => { const d = new Date(); return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`; };
+const curMonth = () => todayISO().slice(0, 7);
+const addMonths = (ym, n) => { let [y, m] = ym.split('-').map(Number); m += n; y += Math.floor((m - 1) / 12); m = ((m - 1) % 12 + 12) % 12 + 1; return `${y}-${pad(m)}`; };
+const monthDiff = (a, b) => { const [ay, am] = a.split('-').map(Number), [by, bm] = b.split('-').map(Number); return (by - ay) * 12 + (bm - am); };
+const daysIn = ym => { const [y, m] = ym.split('-').map(Number); return new Date(y, m, 0).getDate(); };
+const num = v => { const n = parseFloat(String(v).replace(',', '.')); return isFinite(n) ? Math.round(n * 100) / 100 : 0; };
+const COLORS = ['#0f766e','#d97706','#6d28d9','#db2777','#2563eb','#65a30d','#dc2626','#0891b2'];
+
+const DEFAULT_CATS = ['Housing','Utilities','Groceries','Transport','Eating out','Subscriptions','Health','Shopping','Entertainment','Travel','Gifts','Savings','Other'];
+function defaultState() {
+  return { version: 1, updatedAt: 0,
+    settings: { currency: 'EUR', locale: navigator.language || 'en-US' },
+    people: [{ id: 'me', name: 'Me', color: COLORS[0] }],
+    categories: DEFAULT_CATS.map(name => ({ name, limit: 0 })),
+    entries: [], recurring: [], goals: [], settlements: [] };
+}
+function migrate(d) {
+  const s = Object.assign(defaultState(), d || {});
+  s.settings = Object.assign(defaultState().settings, s.settings || {});
+  for (const k of ['people','categories','entries','recurring','goals','settlements']) if (!Array.isArray(s[k])) s[k] = [];
+  if (!s.deleted || typeof s.deleted !== 'object') s.deleted = {};
+  if (!s.people.find(p => p.id === 'me')) s.people.unshift({ id: 'me', name: 'Me', color: COLORS[0] });
+  if (!s.categories.length) s.categories = DEFAULT_CATS.map(name => ({ name, limit: 0 }));
+  if (!s.categories.some(c => c.name === 'Savings')) s.categories.splice(Math.max(0, s.categories.length - 1), 0, { name: 'Savings', limit: 0 });
+  return s;
+}
+function loadLocal() { try { return migrate(JSON.parse(localStorage.getItem(KEY))); } catch { return defaultState(); } }
+
+let S = loadLocal();
+const ui = { tab: 'overview', month: curMonth(), filter: 'all', view: 'me' };
+try { Object.assign(ui, JSON.parse(sessionStorage.getItem('budget-ui') || '{}')); } catch {}
+
+function money(n, opts = {}) {
+  try { return new Intl.NumberFormat(S.settings.locale || undefined, { style: 'currency', currency: S.settings.currency || 'EUR', ...opts }).format(n || 0); }
+  catch { return (n || 0).toFixed(2) + ' ' + S.settings.currency; }
+}
+const monthLabel = (ym, short) => new Date(ym + '-01T12:00').toLocaleDateString(S.settings.locale || undefined, short ? { month: 'short' } : { month: 'long', year: 'numeric' });
+const dateLabel = iso => new Date(iso + 'T12:00').toLocaleDateString(S.settings.locale || undefined, { day: 'numeric', month: 'short' });
+const person = id => S.people.find(p => p.id === id) || { id, name: '(removed)', color: '#888' };
+const pname = id => id === ME ? 'You' : person(id).name;
+
+/* ---------- persistence + sync (home server or free Google cloud) ---------- */
+// Every record gets a change time "u"; deletions leave a tombstone in S.deleted.
+// Two phones that changed different things are merged, nothing is overwritten.
+const COLLS = ['people', 'entries', 'recurring', 'goals', 'settlements'];
+const lsGet = (k, d) => { try { return localStorage.getItem(k) ?? d; } catch { return d; } };
+const lsSet = (k, v) => { try { v == null ? localStorage.removeItem(k) : localStorage.setItem(k, v); } catch {} };
+let ME = lsGet('budget-me', 'me'); // which person uses THIS device
+const sync = { status: 'local', timer: null, busy: false, again: false, last: 0,
+  pin: lsGet('budget-pin', ''), cfg: (() => { try { return JSON.parse(lsGet('budget-sync', 'null')); } catch { return null; } })() };
+
+function recKeys(st) {
+  const m = new Map();
+  for (const c of COLLS) for (const r of st[c] || []) {
+    const { u, contributions, ...rest } = r; m.set(c + ':' + r.id, JSON.stringify(rest));
+    if (c === 'goals') for (const x of contributions || []) { const { u: _u, ...cr } = x; m.set('contrib:' + x.id, JSON.stringify(cr)); }
+  }
+  m.set('meta', JSON.stringify({ s: st.settings, c: st.categories }));
+  return m;
+}
+let snap = recKeys(S);
+function stamp() {
+  const now = Date.now(), cur = recKeys(S);
+  S.deleted ||= {};
+  for (const c of COLLS) for (const r of S[c]) {
+    if (snap.get(c + ':' + r.id) !== cur.get(c + ':' + r.id)) r.u = now;
+    if (c === 'goals') for (const x of r.contributions || []) if (snap.get('contrib:' + x.id) !== cur.get('contrib:' + x.id)) x.u = now;
+  }
+  if (snap.get('meta') !== cur.get('meta')) S.metaU = now;
+  for (const k of snap.keys()) if (k !== 'meta' && !cur.has(k)) S.deleted[k.slice(k.indexOf(':') + 1)] = now;
+  snap = cur;
+}
+function mergeList(a, b, del) {
+  const map = new Map();
+  for (const r of a) map.set(r.id, r);
+  for (const r of b) { const cur = map.get(r.id); if (!cur || (r.u || 0) > (cur.u || 0)) map.set(r.id, r); }
+  return [...map.values()].filter(r => !(del[r.id] && del[r.id] >= (r.u || 0)));
+}
+function mergeStates(a, b) { // a = this device, b = cloud copy
+  const out = JSON.parse(JSON.stringify(a)), del = { ...(b.deleted || {}) };
+  for (const k in a.deleted || {}) del[k] = Math.max(del[k] || 0, a.deleted[k]);
+  out.deleted = del;
+  for (const c of COLLS) {
+    out[c] = mergeList(a[c] || [], b[c] || [], del).map(r => JSON.parse(JSON.stringify(r)));
+    if (c === 'goals') for (const g of out.goals) {
+      const ga = (a.goals || []).find(x => x.id === g.id), gb = (b.goals || []).find(x => x.id === g.id);
+      g.contributions = mergeList(ga ? ga.contributions || [] : [], gb ? gb.contributions || [] : [], del);
+    }
+  }
+  if ((b.metaU || 0) > (a.metaU || 0)) { out.settings = b.settings; out.categories = b.categories; out.metaU = b.metaU; }
+  out.updatedAt = Math.max(a.updatedAt || 0, b.updatedAt || 0);
+  return migrate(out);
+}
+function fingerprint(st) {
+  const sortById = l => [...(l || [])].sort((x, y) => x.id < y.id ? -1 : 1);
+  return JSON.stringify([st.settings, st.categories, ...COLLS.map(c => sortById(st[c]).map(r => c === 'goals' ? { ...r, contributions: sortById(r.contributions) } : r)), Object.keys(st.deleted || {}).sort()]);
+}
+function saveLocal() { lsSet(KEY, JSON.stringify(S)); }
+function save() {
+  stamp(); S.updatedAt = Date.now(); saveLocal();
+  if (backend()) { clearTimeout(sync.timer); sync.timer = setTimeout(() => { sync.timer = null; syncNow(); }, 600); }
+  render();
+}
+const hdr = () => sync.pin ? { 'X-Budget-Pin': sync.pin } : {};
+const serverBackend = {
+  async get() {
+    const r = await fetch('api/data', { headers: hdr(), cache: 'no-store' });
+    if (r.status === 401) throw { auth: true };
+    if (!r.ok) throw { absent: true };
+    const j = await r.json().catch(() => null);
+    if (!j || !('rev' in j)) throw { absent: true };
+    return j;
+  },
+  async put(rev, data) {
+    const r = await fetch('api/data', { method: 'PUT', headers: { 'Content-Type': 'application/json', ...hdr() }, body: JSON.stringify({ rev, data }) });
+    if (r.status === 401) throw { auth: true };
+    const j = await r.json();
+    if (r.status === 409) return { conflict: true, ...j };
+    if (!r.ok) throw {};
+    return j;
+  }
+};
+const cloudBackend = cfg => ({
+  async get() {
+    const r = await fetch(cfg.url + (cfg.url.includes('?') ? '&' : '?') + 'key=' + encodeURIComponent(cfg.key), { cache: 'no-store' });
+    const j = await r.json();
+    if (j.error === 'auth') throw { auth: true, cloud: true };
+    if (j.error) throw {};
+    return j;
+  },
+  async put(rev, data) {
+    const r = await fetch(cfg.url, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ key: cfg.key, rev, data }) });
+    const j = await r.json();
+    if (j.error === 'auth') throw { auth: true, cloud: true };
+    if (j.error && !j.conflict) throw {};
+    return j;
+  }
+});
+let serverAbsent = false;
+function backend() {
+  if (sync.cfg && sync.cfg.url) return cloudBackend(sync.cfg);
+  if (location.protocol !== 'file:' && !serverAbsent) return serverBackend;
+  return null;
+}
+function setStatus(s) { if (sync.status === s) return; sync.status = s; renderHeader(); if (ui.tab === 'settings' && !$('#modal').open) render(); }
+async function syncNow() {
+  const be = backend(); if (!be) return setStatus('local');
+  if (sync.busy) { sync.again = true; return; }
+  sync.busy = true; setStatus(sync.status === 'local' ? 'local' : sync.status);
+  try {
+    for (let attempt = 0; attempt < 5; attempt++) {
+      const remote = await be.get();
+      const rd = remote.data && Array.isArray(remote.data.entries) ? migrate(remote.data) : null;
+      if (rd) {
+        const merged = mergeStates(S, rd);
+        if (fingerprint(merged) !== fingerprint(S)) { S = merged; snap = recKeys(S); saveLocal(); if (!$('#modal').open) render(); }
+        if (fingerprint(S) === fingerprint(rd)) break; // cloud already has everything
+      } else if (!S.updatedAt) break; // both empty
+      const res = await be.put(remote.rev || 0, S);
+      if (!res.conflict) break; // otherwise someone saved in between: fetch again and merge
+    }
+    sync.last = Date.now(); setStatus('synced');
+  } catch (e) {
+    if (e && e.auth && !e.cloud) {
+      const p = prompt('This budget is protected. Enter PIN:');
+      if (p) { sync.pin = p; lsSet('budget-pin', p); sync.busy = false; return syncNow(); }
+      setStatus('locked');
+    } else if (e && e.auth) setStatus('badkey');
+    else if (e && e.absent) { serverAbsent = true; setStatus('local'); }
+    else setStatus('offline');
+  } finally { sync.busy = false; if (sync.again) { sync.again = false; syncNow(); } }
+}
+const pull = syncNow;
+document.addEventListener('visibilitychange', () => { if (!document.hidden) syncNow(); });
+addEventListener('online', syncNow);
+setInterval(() => { if (!document.hidden && backend() && !$('#modal').open) syncNow(); }, 30000);
+// Opening a setup link (…#sync=…) on a second phone connects it automatically
+function readSetupLink() {
+  const m = location.hash.match(/sync=([^&]+)/); if (!m) return;
+  try {
+    const cfg = JSON.parse(decodeURIComponent(escape(atob(decodeURIComponent(m[1])))));
+    if (cfg.url && cfg.key) { sync.cfg = { url: cfg.url, key: cfg.key }; lsSet('budget-sync', JSON.stringify(sync.cfg)); ui.tab = 'settings'; ui.justLinked = true; }
+  } catch {}
+  history.replaceState(null, '', location.pathname + location.search);
+}
+function setupLink() {
+  const base = location.protocol === 'file:' ? '' : location.origin + location.pathname;
+  return base + '#sync=' + encodeURIComponent(btoa(unescape(encodeURIComponent(JSON.stringify(sync.cfg)))));
+}
+
+/* ---------- domain logic ---------- */
+function activeIn(r, ym) { return r.startMonth <= ym && (!r.endMonth || ym <= r.endMonth) && !(r.skips || []).includes(ym); }
+function itemsFor(ym) {
+  const out = S.entries.filter(e => e.date.slice(0, 7) === ym).map(e => ({ ...e, src: 'entry' }));
+  for (const r of S.recurring) if (activeIn(r, ym))
+    out.push({ ...r, src: 'recurring', date: `${ym}-${pad(Math.min(r.day || 1, daysIn(ym)))}` });
+  return out.sort((a, b) => b.date.localeCompare(a.date) || a.name.localeCompare(b.name));
+}
+const splitIds = e => Object.keys(e.split || {}).filter(k => e.split[k] > 0);
+const isJoint = e => e.kind === 'expense' && splitIds(e).length > 1;
+const isSavings = e => e.kind === 'expense' && (!!e.goalId || e.category === 'Savings');
+const splitModeOf = e => splitIds(e).length > 1 ? (e.splitMode || 'custom') : 'custom';
+const SPLIT_HELP = {
+  equal: 'Everyone pays the same share.',
+  income: 'Each person pays in proportion to their income this month (earn 60% of the total → pay 60%).',
+  equalLeft: 'Shares are worked out so everyone has the same amount left at the end of the month, based on the income and other expenses entered.',
+  custom: 'Type each person\'s share as a ratio, e.g. 60 and 40, or 2 and 1.'
+};
+function staticShares(e) {
+  const ids = splitIds(e), eq = e.splitMode === 'equal', w = k => eq ? 1 : e.split[k];
+  const tot = ids.reduce((s, k) => s + w(k), 0);
+  return Object.fromEntries(ids.map(k => [k, tot ? e.amount * w(k) / tot : 0]));
+}
+const contribsIn = ym => S.goals.flatMap(g => (g.contributions || []).filter(c => c.month === ym).map(c => ({ ...c, goal: g })));
+// Work out every person's share of every expense in a month. "By income" and "Equal left"
+// shares depend on everyone's income and other expenses, so they are computed last.
+function sharesFor(ym, items) {
+  const map = {}, inc = {}, base = {};
+  for (const p of S.people) inc[p.id] = 0;
+  for (const e of items) if (e.kind === 'income') { const k = e.person || 'me'; inc[k] = (inc[k] || 0) + e.amount; }
+  Object.assign(base, inc);
+  for (const c of contribsIn(ym)) { const k = c.person || 'me'; base[k] = (base[k] || 0) - c.amount; }
+  const take = (e, sh) => { map[e.id] = sh; for (const k in sh) base[k] = (base[k] || 0) - sh[k]; };
+  const exp = items.filter(e => e.kind === 'expense');
+  for (const e of exp) if (!['income', 'equalLeft'].includes(splitModeOf(e))) take(e, staticShares(e));
+  for (const e of exp) if (splitModeOf(e) === 'income') {
+    const ids = splitIds(e), w = ids.map(k => Math.max(0, inc[k] || 0)), t = w.reduce((a, b) => a + b, 0);
+    take(e, Object.fromEntries(ids.map((k, i) => [k, e.amount * (t ? w[i] / t : 1 / ids.length)])));
+  }
+  const groups = {};
+  for (const e of exp) if (splitModeOf(e) === 'equalLeft') (groups[splitIds(e).sort().join('|')] ||= []).push(e);
+  for (const key in groups) {
+    const ids = key.split('|'), es = groups[key], T = es.reduce((s, e) => s + e.amount, 0), b = ids.map(k => base[k] || 0);
+    let frac = ids.map(() => 1 / ids.length);
+    if (T > 0) { // "water-filling": whoever has more left pays more, until everyone is level
+      let lo = Math.min(...b) - T, hi = Math.max(...b);
+      for (let i = 0; i < 60; i++) { const mid = (lo + hi) / 2; if (b.reduce((s, x) => s + Math.max(0, x - mid), 0) > T) lo = mid; else hi = mid; }
+      const raw = b.map(x => Math.max(0, x - hi)), s = raw.reduce((a, c) => a + c, 0);
+      if (s) frac = raw.map(x => x / s);
+    }
+    for (const e of es) take(e, Object.fromEntries(ids.map((k, i) => [k, e.amount * frac[i]])));
+  }
+  return { map, inc };
+}
+const shareCache = new Map(); let shareCacheAt = null;
+function monthShares(ym) {
+  if (shareCacheAt !== S.updatedAt) { shareCache.clear(); shareCacheAt = S.updatedAt; }
+  if (!shareCache.has(ym)) shareCache.set(ym, sharesFor(ym, itemsFor(ym)));
+  return shareCache.get(ym);
+}
+function shareOf(e, pid) {
+  if (e.kind !== 'expense') return 0;
+  const m = monthShares(e.date.slice(0, 7)).map[e.id];
+  return (m || staticShares(e))[pid] || 0;
+}
+// amount as seen from the current perspective (me vs household)
+function amt(e) {
+  if (ui.view === 'household' || S.people.length < 2) return e.amount;
+  return e.kind === 'income' ? ((e.person || 'me') === ME ? e.amount : 0) : shareOf(e, ME);
+}
+const mineContrib = c => ui.view === 'household' || S.people.length < 2 || (c.person || 'me') === ME;
+function linkedSaved(g, onlyMonth) {
+  let s = 0; const now = curMonth();
+  for (const e of S.entries) if (e.goalId === g.id) { const m = e.date.slice(0, 7); if (onlyMonth ? m === onlyMonth : m <= now) s += e.amount; }
+  for (const r of S.recurring) if (r.goalId === g.id) {
+    if (onlyMonth) { if (activeIn(r, onlyMonth)) s += r.amount; }
+    else for (let ym = r.startMonth; ym <= now && (!r.endMonth || ym <= r.endMonth); ym = addMonths(ym, 1)) if (activeIn(r, ym)) s += r.amount;
+  }
+  return s;
+}
+const goalSaved = g => (g.contributions || []).reduce((s, c) => s + c.amount, 0) + linkedSaved(g);
+const goalAddedIn = (g, ym) => (g.contributions || []).filter(c => c.month === ym).reduce((s, c) => s + c.amount, 0) + linkedSaved(g, ym);
+function summary(ym) {
+  const items = itemsFor(ym);
+  const r = { income: 0, fixed: 0, variable: 0, joint: 0, personal: 0, saved: 0, cats: {}, items };
+  for (const e of items) {
+    const a = amt(e); if (!a) continue;
+    if (e.kind === 'income') { r.income += a; continue; }
+    if (isSavings(e)) { r.saved += a; continue; }
+    e.fixed ? r.fixed += a : r.variable += a;
+    isJoint(e) ? r.joint += a : r.personal += a;
+    const c = e.category || 'Other'; r.cats[c] = (r.cats[c] || 0) + a;
+  }
+  for (const c of contribsIn(ym)) if (mineContrib(c)) r.saved += c.amount;
+  r.spent = r.fixed + r.variable; r.left = r.income - r.spent - r.saved;
+  return r;
+}
+// What each person earns, carries (their share), saves and has left in a month
+function personSummary(ym) {
+  const r = {}, row = id => (r[id] ||= { income: 0, spent: 0, saved: 0, paid: 0 });
+  S.people.forEach(p => row(p.id));
+  for (const e of itemsFor(ym)) {
+    if (e.kind === 'income') { row(e.person || 'me').income += e.amount; continue; }
+    row(e.paidBy).paid += e.amount;
+    for (const id of splitIds(e)) row(id)[isSavings(e) ? 'saved' : 'spent'] += shareOf(e, id);
+  }
+  for (const c of contribsIn(ym)) row(c.person || 'me').saved += c.amount;
+  for (const id in r) r[id].left = r[id].income - r[id].spent - r[id].saved;
+  return r;
+}
+// Balances: positive = this person is owed money by the group, negative = owes.
+function balances(upto = curMonth()) {
+  const net = Object.fromEntries(S.people.map(p => [p.id, 0]));
+  const add = (id, v) => { net[id] = (net[id] || 0) + v; };
+  const apply = e => {
+    if (e.kind !== 'expense' || !isJoint(e) && splitIds(e)[0] === e.paidBy) return;
+    add(e.paidBy, e.amount);
+    for (const id of splitIds(e)) add(id, -shareOf(e, id));
+  };
+  S.entries.filter(e => e.date.slice(0, 7) <= upto).forEach(apply);
+  for (const r of S.recurring) for (let ym = r.startMonth; ym <= upto && (!r.endMonth || ym <= r.endMonth); ym = addMonths(ym, 1)) if (activeIn(r, ym)) apply({ ...r, date: `${ym}-01` });
+  for (const s of S.settlements) if (s.date.slice(0, 7) <= upto) { add(s.from, s.amount); add(s.to, -s.amount); }
+  for (const k in net) net[k] = Math.round(net[k] * 100) / 100;
+  return net;
+}
+
+/* ---------- rendering ---------- */
+const STATUS_DOT = { synced: 'var(--pos)', offline: 'var(--var)', locked: 'var(--neg)', badkey: 'var(--neg)', local: 'var(--left)' };
+function renderHeader() {
+  const dot = STATUS_DOT[sync.status], lbl = { synced: 'Synced', offline: 'Offline – will sync', locked: 'Locked (PIN)', badkey: 'Sync password wrong', local: 'Saved on this device' }[sync.status];
+  $('#monthLabel').innerHTML = `${esc(monthLabel(ui.month))}<small><span class="syncdot" style="background:${dot}"></span>${lbl}${ui.month !== curMonth() ? ' · <a href="#" data-act="today">Today</a>' : ''}</small>`;
+}
+function render() {
+  if (!S.people.some(p => p.id === ME)) ME = 'me';
+  try { sessionStorage.setItem('budget-ui', JSON.stringify({ tab: ui.tab, view: ui.view, filter: ui.filter })); } catch {}
+  renderHeader();
+  document.querySelectorAll('nav.tabs button').forEach(b => b.classList.toggle('on', b.dataset.tab === ui.tab));
+  const fab = { spending: '+ Expense', income: '+ Income', goals: '+ Goal', people: '+ Person', overview: '+ Expense' }[ui.tab];
+  $('#fab').style.display = fab ? '' : 'none'; $('#fab').textContent = fab || '';
+  $('#view').innerHTML = ({ overview, spending, income, goals, people, settings })[ui.tab]();
+}
+function viewToggle() {
+  if (S.people.length < 2) return '';
+  return `<div class="seg"><button data-act="view" data-v="me" class="${ui.view === 'me' ? 'on' : ''}">My share</button><button data-act="view" data-v="household" class="${ui.view === 'household' ? 'on' : ''}">Everyone (full amounts)</button></div>`;
+}
+const tile = (lbl, val, color, cls = '') => `<div class="tile"><div class="lbl">${color ? `<span class="dot" style="background:${color}"></span>` : ''}${lbl}</div><div class="val num ${cls}">${val}</div></div>`;
+
+function overview() {
+  const s = summary(ui.month);
+  const total = Math.max(s.income, s.spent + s.saved) || 1;
+  const seg = (v, c) => v > 0 ? `<div style="width:${v / total * 100}%;background:${c}"></div>` : '';
+  const isEmpty = !s.items.length && !s.saved;
+  let h = viewToggle();
+  h += `<section class="card"><div class="muted small">${s.left >= 0 ? 'Left to spend' : 'Over budget by'} · ${esc(monthLabel(ui.month))}</div>
+    <div class="big ${s.left < 0 ? 'neg' : ''}">${money(Math.abs(s.left))}</div>
+    <div class="stack">${seg(s.fixed, 'var(--fixed)')}${seg(s.variable, 'var(--var)')}${seg(s.saved, 'var(--save)')}${seg(Math.max(s.left, 0), 'var(--left)')}</div>
+    <div class="legend"><span><i class="dot" style="background:var(--fixed)"></i>Fixed</span><span><i class="dot" style="background:var(--var)"></i>Variable</span><span><i class="dot" style="background:var(--save)"></i>Saved</span><span><i class="dot" style="background:var(--left)"></i>Left</span></div></section>`;
+  if (isEmpty) h += `<div class="card empty">Nothing here yet for this month.<br><br>
+    Start with your <a href="#" data-act="add-income">income</a>, then add <a href="#" data-act="add-expense" data-fixed="1">fixed expenses</a> (rent, phone, subscriptions — they repeat every month automatically) and day-to-day <a href="#" data-act="add-expense">spending</a>.</div>`;
+  h += `<div class="grid g4">${tile('Income', money(s.income), 'var(--pos)')}${tile('Fixed', money(s.fixed), 'var(--fixed)')}${tile('Variable', money(s.variable), 'var(--var)')}${tile('Saved', money(s.saved), 'var(--save)')}</div>`;
+  h += personCard() + jointCard();
+  if (S.people.length > 1) h += `<div class="grid">${tile('Joint expenses', money(s.joint), 'var(--save)')}${tile('Personal expenses', money(s.personal), 'var(--muted)')}</div>`;
+
+  // categories with limits
+  const cats = S.categories.map(c => ({ ...c, spent: s.cats[c.name] || 0 }));
+  for (const k in s.cats) if (!cats.find(c => c.name === k)) cats.push({ name: k, limit: 0, spent: s.cats[k] });
+  const shown = cats.filter(c => c.spent || c.limit).sort((a, b) => b.spent - a.spent);
+  if (shown.length) {
+    h += `<section class="card"><h3>By category <a class="small" href="#" data-act="tab" data-tab="settings" style="text-transform:none">Set limits</a></h3>`;
+    for (const c of shown) {
+      const pct = c.limit ? Math.min(100, c.spent / c.limit * 100) : 0, over = c.limit && c.spent > c.limit;
+      h += `<div class="catrow"><div class="top"><span>${esc(c.name)}</span><span class="num ${over ? 'neg' : ''}">${money(c.spent)}${c.limit ? ` <span class="muted">/ ${money(c.limit, { maximumFractionDigits: 0 })}</span>` : ''}</span></div>
+        ${c.limit ? `<div class="bar ${over ? 'over' : ''}"><div style="width:${pct}%"></div></div>${over ? `<div class="small neg">${money(c.spent - c.limit)} over limit</div>` : `<div class="small muted">${money(c.limit - c.spent)} left</div>`}` : ''}</div>`;
+    }
+    h += `</section>`;
+  }
+  // goals
+  if (S.goals.length) {
+    h += `<section class="card"><h3>Savings goals <a class="small" href="#" data-act="tab" data-tab="goals" style="text-transform:none">All goals</a></h3>`;
+    for (const g of S.goals) h += goalRow(g, true);
+    h += `</section>`;
+  }
+  // balances
+  if (S.people.length > 1) {
+    const b = balances(), lines = S.people.filter(p => p.id !== ME && Math.abs(b[p.id]) >= 0.01);
+    if (lines.length) h += `<section class="card"><h3>Who owes what</h3>${lines.map(p => `<div class="catrow"><div class="top"><span>${esc(p.name)}</span><span class="num ${b[p.id] < 0 ? 'pos' : 'neg'}">${b[p.id] < 0 ? 'owes ' + money(-b[p.id]) : 'is owed ' + money(b[p.id])}</span></div></div>`).join('')}</section>`;
+  }
+  // 6 month trend
+  const months = Array.from({ length: 6 }, (_, i) => addMonths(ui.month, i - 5)).map(m => ({ m, ...summary(m) }));
+  const max = Math.max(1, ...months.map(x => Math.max(x.income, x.spent)));
+  h += `<section class="card"><h3>Last 6 months</h3><div class="months">${months.map(x => `<div class="m ${x.m === ui.month ? 'cur' : ''}" data-act="goto" data-m="${x.m}" title="Income ${money(x.income)} · Spent ${money(x.spent)}">
+    <div class="bars"><div style="height:${x.income / max * 100}%;background:var(--pos)"></div><div style="height:${x.spent / max * 100}%;background:var(--var)"></div></div><span>${esc(monthLabel(x.m, true))}</span></div>`).join('')}</div>
+    <div class="legend" style="margin-top:8px"><span><i class="dot" style="background:var(--pos)"></i>Income</span><span><i class="dot" style="background:var(--var)"></i>Spent</span></div></section>`;
+  return h;
+}
+
+function itemRow(e) {
+  const joint = isJoint(e), mine = shareOf(e, ME);
+  const badges = [];
+  if (isSavings(e)) badges.push(`<span class="badge joint">💰 ${e.goalId ? esc((S.goals.find(g => g.id === e.goalId) || {}).name || 'Savings') : 'Savings'}</span>`);
+  else if (e.kind === 'expense') badges.push(e.fixed ? '<span class="badge fixed">Fixed</span>' : '<span class="badge var">Variable</span>');
+  if (e.src === 'recurring') badges.push('<span class="badge" title="Repeats monthly">↻ monthly</span>');
+  if (joint) badges.push(`<span class="badge joint">Joint ${{ equal: '50/50', income: 'by income', equalLeft: 'equal left', custom: '' }[splitModeOf(e)] || ''} · ${splitIds(e).map(id => esc(pname(id))).join(', ')}</span>`);
+  if (e.kind === 'expense' && S.people.length > 1 && e.paidBy !== ME) badges.push(`<span class="badge">paid by ${esc(pname(e.paidBy))}</span>`);
+  if (e.kind === 'income' && S.people.length > 1) badges.push(`<span class="badge">${esc(pname(e.person || 'me'))}</span>`);
+  const sub2 = e.kind === 'expense' && S.people.length > 1 && Math.abs(mine - e.amount) > 0.004 ? `<div class="sub">your share ${money(mine)}</div>` : '';
+  const letter = (e.kind === 'income' ? '+' : (e.category || '?')[0]).toUpperCase();
+  return `<li class="row" data-act="edit" data-id="${e.id}" data-src="${e.src}">
+    <div class="ico">${esc(letter)}</div>
+    <div class="main"><div class="title">${esc(e.name)}</div><div class="sub">${dateLabel(e.date)}${e.category && e.kind === 'expense' ? ' · ' + esc(e.category) : ''} ${badges.join('')}</div></div>
+    <div class="amt num ${e.kind === 'income' ? 'pos' : ''}">${money(e.amount)}${sub2}</div></li>`;
+}
+function contribRow(c) {
+  return `<li class="row" data-act="tab" data-tab="goals"><div class="ico" style="color:var(--save)">◎</div>
+    <div class="main"><div class="title">${esc(c.goal.name)}</div><div class="sub">${dateLabel(c.date)} · added in Goals ${S.people.length > 1 ? `<span class="badge">${esc(pname(c.person || 'me'))}</span>` : ''}</div></div>
+    <div class="amt num ${c.amount < 0 ? 'neg' : ''}">${money(c.amount)}</div></li>`;
+}
+// Who should pay what for this month's joint expenses
+function jointCard() {
+  const items = itemsFor(ui.month).filter(isJoint);
+  if (!items.length || S.people.length < 2) return '';
+  const ids = S.people.map(p => p.id).filter(id => items.some(e => splitIds(e).includes(id) || e.paidBy === id));
+  const share = {}, paid = {};
+  ids.forEach(id => { share[id] = 0; paid[id] = 0; });
+  for (const e of items) { paid[e.paidBy] = (paid[e.paidBy] || 0) + e.amount; for (const id of splitIds(e)) share[id] += shareOf(e, id); }
+  const total = items.reduce((s, e) => s + e.amount, 0);
+  const modeLbl = e => ({ equal: '50/50', income: 'by income', equalLeft: 'equal left', custom: 'custom' })[splitModeOf(e)];
+  const head = ids.map(id => `<th>${esc(pname(id))}</th>`).join('');
+  const rows = items.map(e => `<tr data-act="edit" data-id="${e.id}" data-src="${e.src}" style="cursor:pointer"><td><div>${esc(e.name)}</div><div class="small muted">${money(e.amount)} · ${modeLbl(e)}${e.paidBy ? ' · paid by ' + esc(pname(e.paidBy)) : ''}</div></td>${ids.map(id => `<td class="num">${splitIds(e).includes(id) ? money(shareOf(e, id)) : '<span class="muted">—</span>'}</td>`).join('')}</tr>`).join('');
+  const pct = id => total ? Math.round(share[id] / total * 100) : 0;
+  const diff = id => Math.round((paid[id] - share[id]) * 100) / 100;
+  return `<section class="card"><h3>Joint expenses · who pays what</h3>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px">${ids.map(id => `<div class="tile" style="flex:1;min-width:130px;box-shadow:none"><div class="lbl"><span class="dot" style="background:${person(id).color}"></span>${esc(pname(id))} should pay</div><div class="val num">${money(share[id])}</div><div class="small muted">${pct(id)}% of ${money(total)}</div></div>`).join('')}</div>
+    <div style="overflow-x:auto"><table class="t"><tr><th>Expense</th>${head}</tr>${rows}
+    <tr style="font-weight:650"><td>Should pay</td>${ids.map(id => `<td class="num">${money(share[id])}</td>`).join('')}</tr>
+    <tr><td class="muted">Already paid</td>${ids.map(id => `<td class="num muted">${money(paid[id])}</td>`).join('')}</tr>
+    <tr style="font-weight:650"><td>To settle</td>${ids.map(id => { const d = diff(id); return `<td class="num ${d < 0 ? 'neg' : d > 0 ? 'pos' : ''}">${Math.abs(d) < 0.01 ? 'even' : d < 0 ? 'pays ' + money(-d) : 'gets ' + money(d)}</td>`; }).join('')}</tr></table></div>
+    <div class="small muted" style="margin-top:8px">“To settle” is for ${esc(monthLabel(ui.month))} only. Tap an expense to change its split. The running total across all months is under People.</div></section>`;
+}
+function personCard() {
+  if (S.people.length < 2) return '';
+  const ps = personSummary(ui.month);
+  const rows = S.people.filter(p => { const r = ps[p.id]; return r.income || r.spent || r.saved; });
+  if (!rows.length) return '';
+  return `<section class="card"><h3>Left per person · ${esc(monthLabel(ui.month, true))}</h3>${rows.map(p => { const r = ps[p.id]; return `<div class="catrow">
+    <div class="top"><span style="display:flex;align-items:center;gap:7px"><span class="dot" style="background:${p.color}"></span><b>${esc(p.name)}</b></span><span class="num ${r.left < 0 ? 'neg' : ''}" style="font-weight:700;font-size:17px">${money(r.left)}</span></div>
+    ${r.income ? `<div class="bar"><div style="width:${Math.max(0, Math.min(100, r.left / r.income * 100))}%;background:${p.color}"></div></div>` : ''}
+    <div class="small muted" style="margin-top:4px;font-variant-numeric:tabular-nums">${money(r.income)} income − ${money(r.spent)} expenses − ${money(r.saved)} saved</div></div>`; }).join('')}
+    <div class="small muted" style="margin-top:8px">Uses each person's <i>share</i> of expenses, not who paid. Who owes whom is under People.</div></section>`;
+}
+function spending() {
+  const all = itemsFor(ui.month).filter(e => e.kind === 'expense');
+  const f = { all: () => true, fixed: e => e.fixed && !isSavings(e), variable: e => !e.fixed && !isSavings(e), savings: isSavings, joint: isJoint, personal: e => !isJoint(e) }[ui.filter] || (() => true);
+  const list = all.filter(f);
+  const contribs = ['all', 'savings'].includes(ui.filter) ? contribsIn(ui.month).filter(mineContrib) : [];
+  const chips = [['all', 'All'], ['fixed', 'Fixed'], ['variable', 'Variable'], ['savings', 'Savings'], ...(S.people.length > 1 ? [['joint', 'Joint'], ['personal', 'Personal']] : [])];
+  let h = viewToggle() + `<div class="chips">${chips.map(([k, l]) => `<button class="chip ${ui.filter === k ? 'on' : ''}" data-act="filter" data-f="${k}">${l}</button>`).join('')}</div>`;
+  const savingHint = `<div class="small muted" style="padding:6px 4px">Put money aside every month? <a href="#" data-act="add-saving">+ Add savings</a> — it counts as saved (not spent) and can fill up a goal.</div>`;
+  if (!list.length && !contribs.length) return h + `<div class="card empty">No ${ui.filter === 'all' ? '' : ui.filter + ' '}expenses in ${esc(monthLabel(ui.month))}.</div>` + (['all', 'savings'].includes(ui.filter) ? savingHint : '');
+  const groups = [['Fixed expenses', list.filter(e => !isSavings(e) && e.fixed), []], ['Variable expenses', list.filter(e => !isSavings(e) && !e.fixed), []], ['Savings', list.filter(isSavings), contribs]];
+  for (const [title, grp, extra] of groups) {
+    if (!grp.length && !extra.length) continue;
+    const tot = grp.reduce((s, e) => s + amt(e), 0) + extra.reduce((s, c) => s + c.amount, 0);
+    h += `<div class="section-h"><span>${title}</span><span class="num muted">${money(tot)}</span></div><section class="card" style="padding:6px 12px"><ul class="list">${grp.map(itemRow).join('')}${extra.map(contribRow).join('')}</ul></section>`;
+  }
+  if (ui.filter === 'all' && !groups[2][1].length && !contribs.length) h += savingHint;
+  return h;
+}
+function income() {
+  const list = itemsFor(ui.month).filter(e => e.kind === 'income');
+  const tot = list.reduce((s, e) => s + amt(e), 0);
+  let h = viewToggle();
+  if (!list.length) return h + `<div class="card empty">No income recorded for ${esc(monthLabel(ui.month))}.<br>Add your salary and tick “repeats monthly” so it carries over automatically.</div>`;
+  return h + `<div class="section-h"><span>Income</span><span class="num pos">${money(tot)}</span></div><section class="card" style="padding:6px 12px"><ul class="list">${list.map(itemRow).join('')}</ul></section>`;
+}
+function goalRow(g, compact) {
+  const saved = goalSaved(g), pct = g.target ? Math.min(100, saved / g.target * 100) : 0;
+  let plan = '';
+  if (saved >= g.target) plan = '<span class="pos">Goal reached 🎉</span>';
+  else if (g.deadline) {
+    const months = monthDiff(curMonth(), g.deadline) + 1;
+    plan = months > 0 ? `Save <b class="num">${money((g.target - saved) / months)}</b>/month for ${months} month${months > 1 ? 's' : ''} to reach it by ${esc(monthLabel(g.deadline))}` : `<span class="neg">Deadline passed</span>`;
+  }
+  const thisMonth = goalAddedIn(g, ui.month);
+  const monthly = S.recurring.filter(r => r.goalId === g.id && activeIn(r, ui.month)).reduce((s, r) => s + r.amount, 0);
+  return `<div class="goal"><div class="top"><b>${esc(g.name)}</b><span class="num">${money(saved)} <span class="muted">/ ${money(g.target, { maximumFractionDigits: 0 })}</span></span></div>
+    <div class="bar"><div style="width:${pct}%"></div></div>
+    <div class="small muted" style="margin-top:4px">${Math.round(pct)}%${plan ? ' · ' + plan : ''}${thisMonth ? ` · ${money(thisMonth)} added in ${esc(monthLabel(ui.month, true))}` : ''}${monthly ? ` · ↻ ${money(monthly)}/month set aside` : ''}</div>
+    ${compact ? '' : `<div class="actions" style="justify-content:flex-start"><button type="button" class="btn sm primary" data-act="contribute" data-id="${g.id}">+ Add money</button><button type="button" class="btn sm" data-act="goal-monthly" data-id="${g.id}">↻ Save monthly</button><button type="button" class="btn sm" data-act="withdraw" data-id="${g.id}">Withdraw</button><button type="button" class="btn sm" data-act="history" data-id="${g.id}">History</button><button type="button" class="btn sm" data-act="edit-goal" data-id="${g.id}">Edit</button></div>`}</div>`;
+}
+function goals() {
+  if (!S.goals.length) return `<div class="card empty">Set a goal for something you're saving for — a trip, a car, an emergency fund.<br>Money you put towards goals counts as “Saved” in that month's budget.</div>`;
+  const total = S.goals.reduce((s, g) => s + goalSaved(g), 0);
+  return `<div class="grid">${tile('Total saved', money(total), 'var(--save)')}${tile('Saved in ' + esc(monthLabel(ui.month, true)), money(S.goals.reduce((s, g) => s + goalAddedIn(g, ui.month), 0)), 'var(--save)')}</div><section class="card">${S.goals.map(g => goalRow(g)).join('')}</section>
+  <p class="small muted" style="padding:0 4px">Tip: “↻ Save monthly” adds a recurring savings line to your expenses, so it's taken out of what's left to spend every month and fills this goal automatically.</p>`;
+}
+function people() {
+  const b = balances();
+  let h = `<section class="card"><h3>People</h3>${S.people.map(p => {
+    const v = b[p.id] || 0;
+    const st = Math.abs(v) < 0.01 ? '<span class="muted small">All settled</span>' : v < 0 ? `<span class="small neg">owes ${money(-v)}</span>` : `<span class="small pos">is owed ${money(v)}</span>`;
+    return `<div class="person"><div class="avatar" style="background:${p.color}">${esc(p.name[0] || '?').toUpperCase()}</div>
+      <div style="flex:1"><b>${esc(p.name)}</b>${p.id === ME ? ' <span class="muted small">(you)</span>' : ''}<div>${S.people.length > 1 ? st : ''}</div></div>
+      ${S.people.length > 1 && Math.abs(v) >= 0.01 && p.id !== ME ? `<button class="btn sm" data-act="settle" data-id="${p.id}">Settle up</button>` : ''}
+      <button class="btn sm" data-act="edit-person" data-id="${p.id}">Edit</button></div>`;
+  }).join('')}</section>`;
+  if (S.people.length < 2) return h + `<div class="card small muted">Add a partner, roommate or friend. Then, when you add an expense, you can mark it as <b>joint</b> and split it between people (equally or by ratio, e.g. 60/40). The app tracks your share and who owes whom.</div>`;
+  h += personCard();
+  h += jointCard();
+  if (S.settlements.length) h += `<section class="card"><h3>Settlements</h3><ul class="list">${[...S.settlements].sort((a, b) => b.date.localeCompare(a.date)).map(s => `<li class="row" data-act="del-settle" data-id="${s.id}"><div class="main"><div class="title">${esc(pname(s.from))} paid ${esc(pname(s.to))}</div><div class="sub">${dateLabel(s.date)} · tap to delete</div></div><div class="amt num">${money(s.amount)}</div></li>`).join('')}</ul></section>`;
+  return h;
+}
+function syncCard() {
+  const c = sync.cfg;
+  const who = S.people.length > 1 ? `<label class="f">This phone belongs to<select id="setMe">${S.people.map(p => `<option value="${p.id}" ${p.id === ME ? 'selected' : ''}>${esc(p.name)}</option>`).join('')}</select></label>
+    <p class="small muted" style="margin-top:-6px">“My share”, “You” and new expenses use this person. Set it on each phone.</p>` : '';
+  const stat = { synced: `Connected ✓ — last synced ${sync.last ? new Date(sync.last).toLocaleTimeString(S.settings.locale || undefined, { hour: '2-digit', minute: '2-digit' }) : ''}`, offline: 'Can’t reach the cloud right now — changes are kept on this phone and sent later.', badkey: 'The sync password doesn’t match the one in your Google script.', locked: 'Server needs a PIN.', local: 'Not connected yet.' }[sync.status];
+  if (c && c.url) return `<section class="card"><h3>Sync between phones</h3>${who}
+    <p class="small"><span class="syncdot" style="background:${STATUS_DOT[sync.status]}"></span>${stat}</p>
+    ${ui.justLinked ? '<p class="small pos">This phone is now linked. Pick who uses it above.</p>' : ''}
+    <div class="actions" style="justify-content:flex-start"><button class="btn sm primary" data-act="copy-link">Copy link for the other phone</button><button class="btn sm" data-act="sync-now">Sync now</button><span class="spacer"></span><button class="btn sm danger" data-act="unlink">Disconnect</button></div>
+    <p class="small muted">Send the link to the other phone (e.g. WhatsApp to yourself) and open it there — it connects automatically. Treat it like a password.</p></section>`;
+  return `<section class="card"><h3>Sync between phones (free)</h3>${who}
+    <p class="small muted">Uses a small free Google script that saves your budget in your own Google Drive. One-time setup, about 5 minutes — follow <b>SYNC-SETUP.md</b> in the app folder, then paste the two values here.</p>
+    <label class="f">Google script URL<input id="syncUrl" placeholder="https://script.google.com/macros/s/…/exec" autocomplete="off"></label>
+    <label class="f">Sync password (the SECRET from the script)<input id="syncKey" autocomplete="off"></label>
+    <div class="actions" style="justify-content:flex-start"><button class="btn sm primary" data-act="link">Connect</button></div>
+    ${sync.status === 'synced' ? '<p class="small"><span class="syncdot" style="background:var(--pos)"></span>Currently syncing through your home server.</p>' : ''}</section>`;
+}
+function settings() {
+  const st = { synced: 'Synced.', offline: 'Can’t reach sync right now — changes are saved here and sent later.', locked: 'Server needs a PIN.', badkey: 'Sync password is wrong.', local: location.protocol === 'file:' ? 'Opened as a file — data is saved in this browser only.' : 'Saved in this browser only.' }[sync.status];
+  return syncCard() + `<section class="card"><h3>General</h3>
+    <div class="two"><label class="f">Currency<select id="setCurrency">${['EUR','USD','GBP','MAD','CAD','CHF','AUD','JPY','SEK','NOK','DKK','PLN','AED','SAR','TRY','INR','BRL','MXN','ZAR'].concat(S.settings.currency).filter((v, i, a) => a.indexOf(v) === i).map(c => `<option ${c === S.settings.currency ? 'selected' : ''}>${c}</option>`).join('')}</select></label>
+    <label class="f">Number format<select id="setLocale">${[['en-US','1,234.56'],['en-GB','1,234.56 (UK)'],['fr-FR','1 234,56'],['de-DE','1.234,56'],['nl-NL','1.234,56 (NL)'],['ar-MA','Arabic (MA)']].concat([[S.settings.locale, S.settings.locale]]).filter((v, i, a) => a.findIndex(x => x[0] === v[0]) === i).map(([v, l]) => `<option value="${esc(v)}" ${v === S.settings.locale ? 'selected' : ''}>${esc(l)}</option>`).join('')}</select></label></div></section>
+  <section class="card"><h3>Categories & monthly limits</h3><div class="small muted" style="margin-bottom:6px">Set a monthly limit (0 = no limit). Overview shows progress against it.</div>
+    ${S.categories.map((c, i) => `<div class="catedit"><input class="n" data-cat="${i}" data-k="name" value="${esc(c.name)}"><input class="l num" type="number" inputmode="decimal" min="0" step="1" data-cat="${i}" data-k="limit" value="${c.limit || ''}" placeholder="limit"><button class="btn sm danger" data-act="del-cat" data-i="${i}" aria-label="Remove">✕</button></div>`).join('')}
+    <div class="actions" style="justify-content:flex-start"><button class="btn sm" data-act="add-cat">+ Category</button></div></section>
+  <section class="card"><h3>Data</h3><p class="small"><span class="syncdot" style="background:${STATUS_DOT[sync.status]}"></span>${st}</p>
+    <div class="actions" style="justify-content:flex-start"><button class="btn sm" data-act="export">Export backup (.json)</button><button class="btn sm" data-act="import">Import backup</button><button class="btn sm" data-act="csv">Export month (.csv)</button>${sync.status === 'locked' ? '<button class="btn sm" data-act="pin">Enter PIN</button>' : ''}<span class="spacer"></span><button class="btn sm danger" data-act="reset">Erase everything</button></div>
+    <input type="file" id="importFile" accept="application/json,.json" hidden></section>
+  <p class="small muted" style="text-align:center">Budget · your data never leaves your devices.</p>`;
+}
+
+/* ---------- modal ---------- */
+let modalSubmit = null;
+function openModal(title, body, onSubmit, buttons = []) {
+  $('#mtitle').textContent = title; $('#mbody').innerHTML = body;
+  $('#mactions').innerHTML = buttons.map((b, i) => `<button type="button" class="btn ${b.cls || ''}" data-mb="${i}">${b.label}</button>`).join('') + `<span class="spacer"></span><button type="button" class="btn" data-mb="cancel">Cancel</button><button type="submit" class="btn primary">Save</button>`;
+  $('#mactions').onclick = e => { const k = e.target.dataset.mb; if (k === 'cancel') closeModal(); else if (k != null && buttons[k]) buttons[k].onClick(); };
+  $('#mform').oninput = null; $('#mform').onchange = null;
+  modalSubmit = onSubmit; $('#modal').showModal();
+  setTimeout(() => { const f = $('#mbody input:not([type=checkbox]):not([type=hidden])'); if (f && matchMedia('(pointer:fine)').matches && !$('#mbody').contains(document.activeElement)) f.focus(); }, 30);
+}
+function closeModal() { $('#modal').close(); }
+$('#mform').addEventListener('submit', e => {
+  e.preventDefault();
+  for (const el of $('#mform').querySelectorAll('[required]')) if (!el.value.trim()) { el.focus(); el.style.borderColor = 'var(--neg)'; return; }
+  if (modalSubmit && modalSubmit(new FormData($('#mform'))) !== false) { closeModal(); save(); }
+});
+const field = (label, input) => `<label class="f">${label}${input}</label>`;
+const catOptions = sel => S.categories.map(c => `<option ${c.name === sel ? 'selected' : ''}>${esc(c.name)}</option>`).join('') + (sel && !S.categories.find(c => c.name === sel) ? `<option selected>${esc(sel)}</option>` : '');
+const peopleOptions = sel => S.people.map(p => `<option value="${p.id}" ${p.id === sel ? 'selected' : ''}>${esc(p.id === ME ? p.name + ' (you)' : p.name)}</option>`).join('');
+function defaultDate() { return ui.month === curMonth() ? todayISO() : ui.month + '-01'; }
+
+function expenseForm(item, preset = {}) {
+  const rec = item && item.src === 'recurring' ? S.recurring.find(r => r.id === item.id) : null;
+  const ent = item && item.src === 'entry' ? S.entries.find(x => x.id === item.id) : null;
+  const e = rec || ent || { name: '', amount: '', category: 'Groceries', fixed: false, paidBy: ME, split: { [ME]: 1 }, ...preset };
+  const date = item ? item.date : defaultDate();
+  const shared = isJoint(e);
+  const multi = S.people.length > 1;
+  const ids0 = splitIds(e);
+  const mode0 = shared ? (e.splitMode || (ids0.every(k => e.split[k] === e.split[ids0[0]]) ? 'equal' : 'custom')) : (preset.splitMode || 'equal');
+  const modes = [['equal', S.people.length === 2 ? '50/50' : 'Equal'], ['income', 'By income'], ['equalLeft', 'Equal left'], ['custom', 'Custom']];
+  const repeatDefault = preset.repeat ?? e.fixed;
+  const body = `
+    ${field('What was it?', `<input name="name" required value="${esc(e.name)}" placeholder="e.g. Rent, Groceries, Savings" autocomplete="off">`)}
+    <div class="two">${field('Amount (total)', `<input name="amount" required type="number" inputmode="decimal" step="0.01" min="0" value="${e.amount}" placeholder="0.00">`)}
+    ${field(rec ? 'Date (day repeats monthly)' : 'Date', `<input name="date" type="date" required value="${date}">`)}</div>
+    <div class="${S.goals.length ? 'two' : ''}">${field('Category', `<select name="category">${catOptions(e.category)}</select>`)}
+    ${S.goals.length ? field('Towards savings goal', `<select name="goalId"><option value="">— none —</option>${S.goals.map(g => `<option value="${g.id}" ${g.id === e.goalId ? 'selected' : ''}>${esc(g.name)}</option>`).join('')}</select>`) : ''}</div>
+    <p class="small muted" id="savingNote" style="margin-top:-6px" ${isSavings(e) ? '' : 'hidden'}>💰 Counts as <b>saved</b>, not spent${S.goals.length ? '' : ' (create a goal under Goals to track progress)'}.</p>
+    <div class="seg" id="typeSeg"><button type="button" data-t="1" class="${e.fixed ? 'on' : ''}">Fixed</button><button type="button" data-t="0" class="${e.fixed ? '' : 'on'}">Variable</button></div>
+    <input type="hidden" name="fixed" value="${e.fixed ? 1 : 0}">
+    ${item ? (rec ? `<p class="small muted">↻ Repeats every month since ${esc(monthLabel(rec.startMonth))}. Changes apply to all months.</p>` : '') :
+      `<label class="check"><input type="checkbox" name="repeat" ${repeatDefault ? 'checked' : ''}> Repeats every month</label>`}
+    ${multi ? `${field('Paid by', `<select name="paidBy">${peopleOptions(e.paidBy)}</select>`)}
+    <label class="check"><input type="checkbox" name="joint" ${shared ? 'checked' : ''}> Joint expense (split with others)</label>
+    <div class="splitbox" id="splitBox" ${shared ? '' : 'hidden'}>
+      <div class="small muted" style="margin-bottom:6px">How to split?</div>
+      <div class="seg" id="modeSeg" style="margin-bottom:6px">${modes.map(([k, l]) => `<button type="button" data-m="${k}" class="${k === mode0 ? 'on' : ''}">${l}</button>`).join('')}</div>
+      <input type="hidden" name="splitMode" value="${mode0}">
+      <div class="small muted" id="modeHelp" style="margin-bottom:6px"></div>
+      ${S.people.map(p => `<div class="splitrow"><label><input type="checkbox" name="sp_${p.id}" ${(shared ? (e.split[p.id] > 0) : true) ? 'checked' : ''}> ${esc(p.name)}</label><input type="number" name="sw_${p.id}" min="0" step="any" value="${shared && e.split[p.id] > 0 ? e.split[p.id] : 1}"><span class="pv" data-pv="${p.id}"></span></div>`).join('')}
+      <div class="small neg" id="splitWarn" hidden></div></div>` : ''}
+    ${field('Note (optional)', `<input name="note" value="${esc(e.note || '')}">`)}`;
+  const buttons = [];
+  if (rec) {
+    buttons.push({ label: 'Skip this month', onClick: () => { rec.skips = [...(rec.skips || []), ui.month]; closeModal(); save(); } });
+    buttons.push({ label: 'Stop from this month', onClick: () => { if (rec.startMonth >= ui.month) S.recurring = S.recurring.filter(r => r !== rec); else rec.endMonth = addMonths(ui.month, -1); closeModal(); save(); } });
+    buttons.push({ label: 'Delete', cls: 'danger', onClick: () => { if (confirm('Delete this recurring item from ALL months (past ones too)? Use “Stop from this month” to keep history.')) { S.recurring = S.recurring.filter(r => r !== rec); closeModal(); save(); } } });
+  } else if (ent) buttons.push({ label: 'Delete', cls: 'danger', onClick: () => { if (confirm(`Delete “${ent.name}”?`)) { S.entries = S.entries.filter(x => x !== ent); closeModal(); save(); } } });
+
+  const form = $('#mform');
+  const readSplit = mode => {
+    const sp = {};
+    for (const p of S.people) if (form['sp_' + p.id].checked) { const w = mode === 'custom' ? num(form['sw_' + p.id].value) : 1; if (w > 0) sp[p.id] = w; }
+    return sp;
+  };
+  openModal(item ? 'Edit expense' : 'Add expense', body, fd => {
+    const o = { kind: 'expense', name: fd.get('name').trim(), amount: num(fd.get('amount')), category: fd.get('category'), fixed: fd.get('fixed') === '1', note: fd.get('note').trim(), goalId: fd.get('goalId') || '' };
+    const d = fd.get('date') || defaultDate();
+    o.paidBy = multi ? fd.get('paidBy') : ME;
+    o.splitMode = undefined;
+    if (multi && fd.get('joint')) {
+      const mode = fd.get('splitMode');
+      o.split = readSplit(mode);
+      if (Object.keys(o.split).length > 1) o.splitMode = mode;
+      if (!Object.keys(o.split).length) o.split = { [o.paidBy]: 1 };
+    } else o.split = { [o.paidBy]: 1 };
+    if (rec) Object.assign(rec, o, { day: +d.slice(8, 10) });
+    else if (ent) Object.assign(ent, o, { date: d });
+    else if (fd.get('repeat')) S.recurring.push({ id: uid(), ...o, day: +d.slice(8, 10), startMonth: d.slice(0, 7), endMonth: null, skips: [] });
+    else S.entries.push({ id: uid(), ...o, date: d });
+    if (d.slice(0, 7) !== ui.month && !rec) ui.month = d.slice(0, 7);
+  }, buttons);
+
+  const savingCheck = () => { $('#savingNote').hidden = !(form.category.value === 'Savings' || (form.goalId && form.goalId.value)); };
+  form.category.onchange = savingCheck;
+  if (form.goalId) form.goalId.onchange = () => { if (form.goalId.value && ![...form.category.options].some(o => o.selected && o.value === 'Savings')) { if (![...form.category.options].some(o => o.value === 'Savings')) form.category.add(new Option('Savings')); form.category.value = 'Savings'; } savingCheck(); };
+  $('#typeSeg').onclick = ev => { const t = ev.target.dataset.t; if (t == null) return; form.fixed.value = t; $('#typeSeg').querySelectorAll('button').forEach(b => b.classList.toggle('on', b.dataset.t === t)); if (form.repeat) form.repeat.checked = t === '1'; };
+  if (multi) {
+    const upd = () => {
+      const mode = form.splitMode.value, joint = form.joint.checked;
+      $('#modeHelp').textContent = SPLIT_HELP[mode];
+      form.querySelectorAll('.splitrow input[type=number]').forEach(i => i.style.visibility = mode === 'custom' ? '' : 'hidden');
+      const d = form.date.value || defaultDate(), ym = d.slice(0, 7);
+      const draft = { id: '__draft', kind: 'expense', amount: num(form.amount.value), date: d, splitMode: mode, split: readSplit(mode), paidBy: form.paidBy.value, category: form.category.value, goalId: form.goalId ? form.goalId.value : '' };
+      const items = itemsFor(ym).filter(x => !item || x.id !== item.id).concat(draft);
+      const res = sharesFor(ym, items), sh = joint ? (res.map.__draft || {}) : {};
+      S.people.forEach(p => { form.querySelector(`[data-pv="${p.id}"]`).textContent = sh[p.id] != null ? money(sh[p.id]) : '—'; });
+      const noInc = splitIds(draft).filter(k => !res.inc[k]);
+      const warn = $('#splitWarn');
+      warn.hidden = !(joint && ['income', 'equalLeft'].includes(mode) && noInc.length);
+      warn.textContent = `No income entered for ${noInc.map(pname).join(', ')} in ${monthLabel(ym)} — add it in the Income tab (choose “Whose income?”) for this split to be fair.`;
+    };
+    $('#modeSeg').onclick = ev => { const m = ev.target.dataset.m; if (!m) return; form.splitMode.value = m; $('#modeSeg').querySelectorAll('button').forEach(b => b.classList.toggle('on', b.dataset.m === m)); upd(); };
+    form.joint.onchange = () => { $('#splitBox').hidden = !form.joint.checked; upd(); };
+    form.oninput = upd; form.onchange = ev => { if (ev.target !== form.category && ev.target !== form.goalId) upd(); }; upd();
+  }
+}
+
+function incomeForm(item) {
+  const rec = item && item.src === 'recurring' ? S.recurring.find(r => r.id === item.id) : null;
+  const ent = item && item.src === 'entry' ? S.entries.find(x => x.id === item.id) : null;
+  const e = rec || ent || { name: '', amount: '', person: ME };
+  const body = `${field('Source', `<input name="name" required value="${esc(e.name)}" placeholder="e.g. Salary, Freelance" autocomplete="off">`)}
+    <div class="two">${field('Amount', `<input name="amount" required type="number" inputmode="decimal" step="0.01" min="0" value="${e.amount}" placeholder="0.00">`)}
+    ${field('Date', `<input name="date" type="date" required value="${item ? item.date : defaultDate()}">`)}</div>
+    ${S.people.length > 1 ? field('Whose income?', `<select name="person">${peopleOptions(e.person || 'me')}</select>`) : ''}
+    ${item ? (rec ? `<p class="small muted">↻ Repeats every month since ${esc(monthLabel(rec.startMonth))}.</p>` : '') : `<label class="check"><input type="checkbox" name="repeat" checked> Repeats every month</label>`}
+    ${field('Note (optional)', `<input name="note" value="${esc(e.note || '')}">`)}`;
+  const buttons = [];
+  if (rec) {
+    buttons.push({ label: 'Skip this month', onClick: () => { rec.skips = [...(rec.skips || []), ui.month]; closeModal(); save(); } });
+    buttons.push({ label: 'Stop from this month', onClick: () => { if (rec.startMonth >= ui.month) S.recurring = S.recurring.filter(r => r !== rec); else rec.endMonth = addMonths(ui.month, -1); closeModal(); save(); } });
+    buttons.push({ label: 'Delete', cls: 'danger', onClick: () => { if (confirm(`Delete “${rec.name}” from ALL months? (Use “Stop from this month” if it was correct before.)`)) { S.recurring = S.recurring.filter(r => r !== rec); closeModal(); save(); } } });
+  } else if (ent) buttons.push({ label: 'Delete', cls: 'danger', onClick: () => { if (confirm(`Delete “${ent.name}”?`)) { S.entries = S.entries.filter(x => x !== ent); closeModal(); save(); } } });
+  openModal(item ? 'Edit income' : 'Add income', body, fd => {
+    const o = { kind: 'income', name: fd.get('name').trim(), amount: num(fd.get('amount')), person: fd.get('person') || ME, note: fd.get('note').trim() };
+    const d = fd.get('date') || defaultDate();
+    if (rec) Object.assign(rec, o, { day: +d.slice(8, 10) });
+    else if (ent) Object.assign(ent, o, { date: d });
+    else if (fd.get('repeat')) S.recurring.push({ id: uid(), ...o, day: +d.slice(8, 10), startMonth: d.slice(0, 7), endMonth: null, skips: [] });
+    else S.entries.push({ id: uid(), ...o, date: d });
+  }, buttons);
+}
+
+function goalForm(g) {
+  const body = `${field('What are you saving for?', `<input name="name" required value="${esc(g?.name || '')}" placeholder="e.g. Summer trip, New laptop" autocomplete="off">`)}
+    <div class="two">${field('Target amount', `<input name="target" required type="number" inputmode="decimal" min="0" step="0.01" value="${g?.target || ''}">`)}
+    ${field('Reach it by (optional)', `<input name="deadline" type="month" value="${g?.deadline || ''}">`)}</div>
+    ${g ? '' : field('Already saved (optional)', `<input name="initial" type="number" inputmode="decimal" min="0" step="0.01" placeholder="0.00">`)}
+    <p class="small muted">With a date, the app tells you how much to put aside each month.</p>`;
+  openModal(g ? 'Edit goal' : 'New savings goal', body, fd => {
+    const o = { name: fd.get('name').trim(), target: num(fd.get('target')), deadline: fd.get('deadline') || '' };
+    if (g) Object.assign(g, o);
+    else { const ng = { id: uid(), ...o, contributions: [] }; const ini = num(fd.get('initial')); if (ini) ng.contributions.push({ id: uid(), month: '0000-00', date: todayISO(), amount: ini, note: 'Starting balance' }); S.goals.push(ng); }
+  }, g ? [{ label: 'Delete goal', cls: 'danger', onClick: () => { if (confirm(`Delete “${g.name}” and its history? Savings lines linked to it stay in your expenses.`)) { for (const x of [...S.entries, ...S.recurring]) if (x.goalId === g.id) { x.goalId = ''; x.category = 'Savings'; } S.goals = S.goals.filter(x => x !== g); closeModal(); save(); } } }] : []);
+}
+function contributeForm(g, sign) {
+  const saved = goalSaved(g);
+  openModal(sign > 0 ? `Add to “${g.name}”` : `Withdraw from “${g.name}”`,
+    `${field('Amount', `<input name="amount" required type="number" inputmode="decimal" min="0" step="0.01" ${sign < 0 ? `max="${saved}"` : ''}>`)}
+     ${S.people.length > 1 ? field(sign > 0 ? 'Whose money?' : 'Who gets it back?', `<select name="person">${peopleOptions(ME)}</select>`) : ''}
+     <p class="small muted">${sign > 0 ? `Counts as saved in ${esc(monthLabel(ui.month))}. For a regular amount every month, use “↻ Save monthly” instead.` : `Currently saved: ${money(saved)}. Withdrawals go back into ${esc(monthLabel(ui.month))}'s budget.`}</p>`,
+    fd => { const a = num(fd.get('amount')); if (!a) return false; g.contributions.push({ id: uid(), month: ui.month, person: fd.get('person') || ME, date: ui.month === curMonth() ? todayISO() : ui.month + '-01', amount: sign * a }); });
+}
+function historyView(g) {
+  const list = [...(g.contributions || [])].sort((a, b) => b.date.localeCompare(a.date));
+  const linked = linkedSaved(g);
+  openModal(`${g.name} · history`, (linked ? `<p class="small">${money(linked)} came from savings lines in your expenses (edit those under Spending → Savings).</p>` : '') +
+    (list.length ? `<ul class="list">${list.map(c => `<li class="row" data-act="del-contrib" data-g="${g.id}" data-id="${c.id}"><div class="main"><div class="title">${c.note ? esc(c.note) : c.amount > 0 ? 'Added' : 'Withdrawn'}${S.people.length > 1 && c.person ? ' · ' + esc(pname(c.person)) : ''}</div><div class="sub">${c.month === '0000-00' ? 'before tracking' : esc(monthLabel(c.month))} · tap to delete</div></div><div class="amt num ${c.amount < 0 ? 'neg' : 'pos'}">${c.amount > 0 ? '+' : ''}${money(c.amount)}</div></li>`).join('')}</ul>` : '<p class="muted">No one-off contributions yet.</p>'), () => {});
+}
+function savingForm(g) {
+  expenseForm(null, { name: g ? 'Savings – ' + g.name : 'Savings', category: 'Savings', goalId: g ? g.id : '', fixed: true, repeat: true });
+}
+function personForm(p) {
+  const used = p && (S.entries.some(e => e.paidBy === p.id || e.person === p.id || (e.split || {})[p.id]) || S.recurring.some(e => e.paidBy === p.id || e.person === p.id || (e.split || {})[p.id]) || S.settlements.some(s => s.from === p.id || s.to === p.id));
+  openModal(p ? 'Edit person' : 'Add person', `${field('Name', `<input name="name" required value="${esc(p?.name || '')}" placeholder="e.g. Sara, Roommate" autocomplete="off">`)}
+    ${p && p.id !== 'me' && used ? '<p class="small muted">This person is used in expenses, so they can’t be removed (that would break the history).</p>' : ''}`,
+    fd => { const name = fd.get('name').trim(); if (p) p.name = name; else S.people.push({ id: uid(), name, color: COLORS[S.people.length % COLORS.length] }); },
+    p && p.id !== 'me' && !used ? [{ label: 'Remove', cls: 'danger', onClick: () => { S.people = S.people.filter(x => x !== p); closeModal(); save(); } }] : []);
+}
+function settleForm(pid) {
+  const v = balances()[pid] || 0;
+  const from = v < 0 ? pid : ME, to = v < 0 ? ME : pid;
+  openModal('Settle up', `<div class="two">${field('From', `<select name="from">${peopleOptions(from)}</select>`)}${field('To', `<select name="to">${peopleOptions(to)}</select>`)}</div>
+    <div class="two">${field('Amount', `<input name="amount" required type="number" inputmode="decimal" min="0" step="0.01" value="${Math.abs(v).toFixed(2)}">`)}${field('Date', `<input name="date" type="date" value="${todayISO()}">`)}</div>
+    <p class="small muted">Records a payment between people. It doesn't change your spending, only who owes whom.</p>`,
+    fd => { if (fd.get('from') === fd.get('to')) return false; S.settlements.push({ id: uid(), from: fd.get('from'), to: fd.get('to'), amount: num(fd.get('amount')), date: fd.get('date') || todayISO() }); });
+}
+
+/* ---------- events ---------- */
+document.addEventListener('click', ev => {
+  const tabBtn = ev.target.closest('nav.tabs button');
+  if (tabBtn) { ui.tab = tabBtn.dataset.tab; render(); scrollTo(0, 0); return; }
+  const a = ev.target.closest('[data-act]'); if (!a) return;
+  const id = a.dataset.id;
+  if (a.tagName === 'A') ev.preventDefault();
+  switch (a.dataset.act) {
+    case 'prev-month': ui.month = addMonths(ui.month, -1); render(); break;
+    case 'next-month': ui.month = addMonths(ui.month, 1); render(); break;
+    case 'today': ui.month = curMonth(); render(); break;
+    case 'goto': ui.month = a.dataset.m; render(); break;
+    case 'tab': ui.tab = a.dataset.tab; render(); break;
+    case 'view': ui.view = a.dataset.v; render(); break;
+    case 'filter': ui.filter = a.dataset.f; render(); break;
+    case 'fab': ({ overview: () => expenseForm(), spending: () => ui.filter === 'savings' ? savingForm() : expenseForm(null, ui.filter === 'fixed' ? { fixed: true, category: 'Housing' } : {}), income: () => incomeForm(), goals: () => goalForm(), people: () => personForm() })[ui.tab]?.(); break;
+    case 'add-expense': expenseForm(null, a.dataset.fixed ? { fixed: true, category: 'Housing' } : {}); break;
+    case 'add-saving': savingForm(); break;
+    case 'goal-monthly': savingForm(S.goals.find(g => g.id === id)); break;
+    case 'add-income': incomeForm(); break;
+    case 'edit': { const it = itemsFor(ui.month).find(x => x.id === id && x.src === a.dataset.src); if (it) (it.kind === 'income' ? incomeForm : expenseForm)(it); break; }
+    case 'contribute': contributeForm(S.goals.find(g => g.id === id), 1); break;
+    case 'withdraw': contributeForm(S.goals.find(g => g.id === id), -1); break;
+    case 'history': historyView(S.goals.find(g => g.id === id)); break;
+    case 'edit-goal': goalForm(S.goals.find(g => g.id === id)); break;
+    case 'del-contrib': { const g = S.goals.find(x => x.id === a.dataset.g); if (g && confirm('Delete this entry?')) { g.contributions = g.contributions.filter(c => c.id !== id); closeModal(); save(); } break; }
+    case 'edit-person': personForm(S.people.find(p => p.id === id)); break;
+    case 'settle': settleForm(id); break;
+    case 'del-settle': if (confirm('Delete this settlement?')) { S.settlements = S.settlements.filter(s => s.id !== id); save(); } break;
+    case 'add-cat': S.categories.push({ name: 'New category', limit: 0 }); save(); break;
+    case 'del-cat': { const c = S.categories[+a.dataset.i]; if (confirm(`Remove category “${c.name}”? Existing expenses keep their label.`)) { S.categories.splice(+a.dataset.i, 1); save(); } break; }
+    case 'export': download(`budget-backup-${todayISO()}.json`, JSON.stringify(S, null, 2), 'application/json'); break;
+    case 'csv': exportCSV(); break;
+    case 'import': $('#importFile').click(); break;
+    case 'pin': sync.pin = ''; pull(); break;
+    case 'link': {
+      const url = $('#syncUrl').value.trim(), key = $('#syncKey').value.trim();
+      if (!/^https:\/\/script\.google(usercontent)?\.com\//.test(url)) { alert('That doesn’t look like a Google Apps Script web app URL (it should start with https://script.google.com/macros/s/ and end with /exec).'); break; }
+      if (!key) { alert('Enter the sync password (SECRET) you set in the script.'); break; }
+      sync.cfg = { url, key }; lsSet('budget-sync', JSON.stringify(sync.cfg)); sync.status = 'offline'; render(); syncNow(); break;
+    }
+    case 'unlink': if (confirm('Stop syncing this phone? Your data stays on this phone.')) { sync.cfg = null; lsSet('budget-sync', null); sync.status = 'local'; serverAbsent = false; render(); syncNow(); } break;
+    case 'sync-now': syncNow(); break;
+    case 'copy-link': { const l = setupLink(); (navigator.clipboard ? navigator.clipboard.writeText(l) : Promise.reject()).then(() => alert('Link copied. Send it to the other phone and open it there.'), () => prompt('Copy this link and open it on the other phone:', l)); break; }
+    case 'reset': if (confirm('Erase ALL budget data on this device' + (sync.on ? ' and the server' : '') + '? Export a backup first if unsure.') && confirm('Really erase everything?')) { const old = recKeys(S); S = defaultState(); S.deleted = {}; for (const k of old.keys()) if (k !== 'meta' && k !== 'people:me') S.deleted[k.slice(k.indexOf(':') + 1)] = Date.now(); snap = recKeys(S); save(); } break;
+  }
+});
+document.addEventListener('change', ev => {
+  const t = ev.target;
+  if (t.id === 'setCurrency') { S.settings.currency = t.value; save(); }
+  else if (t.id === 'setLocale') { S.settings.locale = t.value; save(); }
+  else if (t.id === 'setMe') { ME = t.value; lsSet('budget-me', ME); ui.justLinked = false; render(); }
+  else if (t.dataset.cat != null) {
+    const c = S.categories[+t.dataset.cat];
+    if (t.dataset.k === 'limit') c.limit = num(t.value);
+    else { const nn = t.value.trim(); if (!nn) return render(); for (const e of [...S.entries, ...S.recurring]) if (e.category === c.name) e.category = nn; c.name = nn; }
+    save();
+  } else if (t.id === 'importFile' && t.files[0]) {
+    t.files[0].text().then(txt => {
+      try { const d = JSON.parse(txt); if (!d || !Array.isArray(d.entries)) throw 0; if (confirm('Replace all current data with this backup?')) { const old = S; S = migrate(d); for (const k of recKeys(old).keys()) if (k !== 'meta' && !recKeys(S).has(k)) S.deleted[k.slice(k.indexOf(':') + 1)] = Date.now(); snap = new Map(); save(); } }
+      catch { alert('That file is not a valid budget backup.'); }
+      t.value = '';
+    });
+  }
+});
+function download(name, text, type) { const u = URL.createObjectURL(new Blob([text], { type })); const l = Object.assign(document.createElement('a'), { href: u, download: name }); document.body.append(l); l.click(); l.remove(); setTimeout(() => URL.revokeObjectURL(u), 1000); }
+function exportCSV() {
+  const q = v => `"${String(v ?? '').replace(/"/g, '""')}"`;
+  const rows = [['Date', 'Type', 'Name', 'Category', 'Fixed/Variable', 'Joint', 'Paid by', 'Split mode', 'Split', 'Amount', 'My share', 'Recurring', 'Note']];
+  for (const e of itemsFor(ui.month)) rows.push([e.date, e.kind, e.name, e.category || '', e.kind === 'expense' ? (isSavings(e) ? 'Savings' : e.fixed ? 'Fixed' : 'Variable') : '', isJoint(e) ? 'Joint' : 'Personal', e.kind === 'expense' ? person(e.paidBy).name : person(e.person || 'me').name, isJoint(e) ? splitModeOf(e) : '', e.kind === 'expense' ? splitIds(e).map(i => `${person(i).name}:${e.split[i]}`).join(' ') : '', e.amount.toFixed(2), (e.kind === 'expense' ? shareOf(e, ME) : ((e.person || 'me') === ME ? e.amount : 0)).toFixed(2), e.src === 'recurring' ? 'yes' : '', e.note || '']);
+  download(`budget-${ui.month}.csv`, rows.map(r => r.map(q).join(',')).join('\n'), 'text/csv');
+}
+// swipe left/right on the page to change month (phones)
+let tx = null;
+document.addEventListener('touchstart', e => { tx = $('#modal').open ? null : [e.touches[0].clientX, e.touches[0].clientY]; }, { passive: true });
+document.addEventListener('touchend', e => { if (!tx || ev_in_scroller(e)) return; const dx = e.changedTouches[0].clientX - tx[0], dy = e.changedTouches[0].clientY - tx[1]; if (Math.abs(dx) > 80 && Math.abs(dy) < 40) { ui.month = addMonths(ui.month, dx < 0 ? 1 : -1); render(); } tx = null; }, { passive: true });
+function ev_in_scroller(e) { return !!e.target.closest('.chips'); }
+
+if ('serviceWorker' in navigator && location.protocol !== 'file:') navigator.serviceWorker.register('sw.js').catch(() => {});
+readSetupLink();
+render();
+syncNow();
+</script>
+</body>
+</html>
