@@ -332,13 +332,21 @@ document.addEventListener('visibilitychange', () => { if (!document.hidden) sync
 addEventListener('online', syncNow);
 setInterval(() => { if (!document.hidden && backend() && !$('#modal').open) syncNow(); }, 30000);
 // Opening a setup link (…#sync=…) on a second phone connects it automatically
+const isStandalone = () => matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
+function parseSetup(text) {
+  const m = String(text || '').match(/sync=([A-Za-z0-9%+\/=_-]+)/); if (!m) return null;
+  try { const cfg = JSON.parse(decodeURIComponent(escape(atob(decodeURIComponent(m[1]))))); return cfg.url && cfg.key ? { url: cfg.url, key: cfg.key } : null; } catch { return null; }
+}
+function applySetup(cfg) {
+  const fresh = !sync.cfg || sync.cfg.url !== cfg.url || sync.cfg.key !== cfg.key;
+  sync.cfg = cfg; lsSet('budget-sync', JSON.stringify(cfg));
+  if (fresh) { ui.tab = 'settings'; ui.justLinked = true; sync.status = 'offline'; }
+}
 function readSetupLink() {
-  const m = location.hash.match(/sync=([^&]+)/); if (!m) return;
-  try {
-    const cfg = JSON.parse(decodeURIComponent(escape(atob(decodeURIComponent(m[1])))));
-    if (cfg.url && cfg.key) { sync.cfg = { url: cfg.url, key: cfg.key }; lsSet('budget-sync', JSON.stringify(sync.cfg)); ui.tab = 'settings'; ui.justLinked = true; }
-  } catch {}
-  history.replaceState(null, '', location.pathname + location.search);
+  const cfg = parseSetup(location.hash); if (!cfg) return;
+  applySetup(cfg);
+  // In Safari/Chrome keep the link in the address bar, so "Add to Home Screen" saves the connected version.
+  if (isStandalone()) history.replaceState(null, '', location.pathname + location.search);
 }
 function setupLink() {
   const base = location.protocol === 'file:' ? '' : location.origin + location.pathname;
@@ -503,7 +511,7 @@ function overview() {
     <div class="stack">${seg(s.fixed, 'var(--fixed)')}${seg(s.variable, 'var(--var)')}${seg(s.saved, 'var(--save)')}${seg(Math.max(s.left, 0), 'var(--left)')}</div>
     <div class="legend"><span><i class="dot" style="background:var(--fixed)"></i>Fixed</span><span><i class="dot" style="background:var(--var)"></i>Variable</span><span><i class="dot" style="background:var(--save)"></i>Saved</span><span><i class="dot" style="background:var(--left)"></i>Left</span></div></section>`;
   if (isEmpty) h += `<div class="card empty">Nothing here yet for this month.<br><br>
-    Start with your <a href="#" data-act="add-income">income</a>, then add <a href="#" data-act="add-expense" data-fixed="1">fixed expenses</a> (rent, phone, subscriptions — they repeat every month automatically) and day-to-day <a href="#" data-act="add-expense">spending</a>.</div>`;
+    ${!sync.cfg ? 'Sharing a budget with someone who already set it up? Go to <a href="#" data-act="tab" data-tab="settings">Settings</a> and paste their link.<br><br>' : ''}Start with your <a href="#" data-act="add-income">income</a>, then add <a href="#" data-act="add-expense" data-fixed="1">fixed expenses</a> (rent, phone, subscriptions — they repeat every month automatically) and day-to-day <a href="#" data-act="add-expense">spending</a>.</div>`;
   h += `<div class="grid g4">${tile('Income', money(s.income), 'var(--pos)')}${tile('Fixed', money(s.fixed), 'var(--fixed)')}${tile('Variable', money(s.variable), 'var(--var)')}${tile('Saved', money(s.saved), 'var(--save)')}</div>`;
   h += personCard() + jointCard();
   if (S.people.length > 1) h += `<div class="grid">${tile('Joint expenses', money(s.joint), 'var(--save)')}${tile('Personal expenses', money(s.personal), 'var(--muted)')}</div>`;
@@ -664,7 +672,7 @@ function syncCard() {
   const stat = { synced: `Connected ✓ — last synced ${sync.last ? new Date(sync.last).toLocaleTimeString(S.settings.locale || undefined, { hour: '2-digit', minute: '2-digit' }) : ''}`, offline: 'Can’t reach the cloud right now — changes are kept on this phone and sent later.', badkey: 'The sync password doesn’t match the one in your Google script.', locked: 'Server needs a PIN.', local: 'Not connected yet.' }[sync.status];
   if (c && c.url) return `<section class="card"><h3>Sync between phones</h3>${who}
     <p class="small"><span class="syncdot" style="background:${STATUS_DOT[sync.status]}"></span>${stat}</p>
-    ${ui.justLinked ? '<p class="small pos">This phone is now linked. Pick who uses it above.</p>' : ''}
+    ${ui.justLinked ? `<p class="small pos">✓ This phone is now linked. Pick who uses it above.</p>${isStandalone() ? '' : `<div class="small" style="background:var(--accent-soft);border-radius:10px;padding:10px 12px;margin-bottom:10px"><b>Next:</b> add it to your home screen <b>from this page</b>:<br>iPhone (Safari): tap Share <b>⬆</b> → <b>Add to Home Screen</b>.<br>Android (Chrome): ⋮ → <b>Add to Home screen</b>.<br>Then always open the app from that icon.</div>`}` : ''}
     <div class="actions" style="justify-content:flex-start"><button class="btn sm primary" data-act="copy-link">Copy link for the other phone</button><button class="btn sm" data-act="sync-now">Sync now</button><span class="spacer"></span><button class="btn sm danger" data-act="unlink">Disconnect</button></div>
     <p class="small muted">Send the link to the other phone (e.g. WhatsApp to yourself) and open it there — it connects automatically. Treat it like a password.</p></section>`;
   return `<section class="card"><h3>Sync between phones (free)</h3>${who}
@@ -672,6 +680,10 @@ function syncCard() {
     <label class="f">Google script URL<input id="syncUrl" placeholder="https://script.google.com/macros/s/…/exec" autocomplete="off"></label>
     <label class="f">Sync password (the SECRET from the script)<input id="syncKey" autocomplete="off"></label>
     <div class="actions" style="justify-content:flex-start"><button class="btn sm primary" data-act="link">Connect</button></div>
+    <div style="border-top:1px solid var(--line);margin-top:14px;padding-top:12px">
+      <b class="small">Got a link from the other phone?</b>
+      <label class="f" style="margin-top:6px">Paste the whole link here<input id="syncPaste" placeholder="https://…#sync=…" autocomplete="off" autocapitalize="off" spellcheck="false"></label>
+      <div class="actions" style="justify-content:flex-start;margin-top:0"><button class="btn sm primary" data-act="paste-link">Connect with link</button></div></div>
     ${sync.status === 'synced' ? '<p class="small"><span class="syncdot" style="background:var(--pos)"></span>Currently syncing through your home server.</p>' : ''}</section>`;
 }
 function settings() {
@@ -911,6 +923,7 @@ document.addEventListener('click', ev => {
     }
     case 'unlink': if (confirm('Stop syncing this phone? Your data stays on this phone.')) { sync.cfg = null; lsSet('budget-sync', null); sync.status = 'local'; serverAbsent = false; render(); syncNow(); } break;
     case 'sync-now': syncNow(); break;
+    case 'paste-link': { const cfg = parseSetup($('#syncPaste').value); if (!cfg) { alert('That isn’t a valid setup link. On the other phone use Settings → “Copy link for the other phone” and paste the whole link.'); break; } applySetup(cfg); render(); syncNow(); break; }
     case 'copy-link': { const l = setupLink(); (navigator.clipboard ? navigator.clipboard.writeText(l) : Promise.reject()).then(() => alert('Link copied. Send it to the other phone and open it there.'), () => prompt('Copy this link and open it on the other phone:', l)); break; }
     case 'reset': if (confirm('Erase ALL budget data on this device' + (sync.on ? ' and the server' : '') + '? Export a backup first if unsure.') && confirm('Really erase everything?')) { const old = recKeys(S); S = defaultState(); S.deleted = {}; for (const k of old.keys()) if (k !== 'meta' && k !== 'people:me') S.deleted[k.slice(k.indexOf(':') + 1)] = Date.now(); snap = recKeys(S); save(); } break;
   }
