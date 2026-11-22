@@ -1,0 +1,33 @@
+rules_version = '2';
+// Nisba security rules: a shared budget ("household") can only be read or changed by its members.
+// Joining requires a valid invite code. Copy this into Firebase console → Firestore → Rules.
+service cloud.firestore {
+  match /databases/{db}/documents {
+    function signedIn() { return request.auth != null; }
+    function household(hid) { return get(/databases/$(db)/documents/households/$(hid)).data; }
+
+    // Invite codes: anyone signed in can look up ONE code (no listing), members create/delete them.
+    match /codes/{code} {
+      allow get: if signedIn();
+      allow list: if false;
+      allow create: if signedIn() && request.auth.uid in household(request.resource.data.hid).members
+                    && request.resource.data.keys().hasOnly(['hid', 'created']);
+      allow delete: if signedIn() && request.auth.uid in household(resource.data.hid).members;
+    }
+
+    match /households/{hid} {
+      allow read: if signedIn() && request.auth.uid in resource.data.members;
+      allow create: if signedIn() && request.resource.data.members == [request.auth.uid];
+      allow update: if signedIn() && request.resource.data.members.size() <= 8 && (
+        // members can change anything (budget data, codes, leaving)
+        request.auth.uid in resource.data.members
+        // non-members can only add themselves, proving they know a valid code for THIS household
+        || (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['members', 'joinedWith'])
+            && request.resource.data.members.toSet() == resource.data.members.toSet().union([request.auth.uid].toSet())
+            && get(/databases/$(db)/documents/codes/$(request.resource.data.joinedWith)).data.hid == hid)
+      );
+      // the last member leaving deletes the shared budget (data deletion)
+      allow delete: if signedIn() && resource.data.members == [request.auth.uid];
+    }
+  }
+}

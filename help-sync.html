@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Nisba Sync Guide</title><link rel="icon" href="icon.svg"><link rel="stylesheet" href="vendor/fonts.css">
+<style>
+:root{color-scheme:light;--bg:#F5F6F8;--card:#FFFFFF;--card-2:#ECEEF5;--text:#13203B;--muted:#5D6183;--line:#E1E3EE;--accent:#1E40AF;--soft:#E2EAF8;--on:#fff}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){color-scheme:dark;--bg:#0B0D12;--card:#161931;--card-2:#1F233F;--text:#ECEDF8;--muted:#A0A4C6;--line:#272B4A;--accent:#6F9BFF;--soft:#232861;--on:#0D0F1E}}
+:root[data-theme="dark"]{color-scheme:dark;--bg:#0B0D12;--card:#161931;--card-2:#1F233F;--text:#ECEDF8;--muted:#A0A4C6;--line:#272B4A;--accent:#6F9BFF;--soft:#232861;--on:#0D0F1E}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:15.5px/1.55 "Instrument Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+main{max-width:720px;margin:0 auto;padding:24px 16px 60px}
+a{color:var(--accent);font-weight:600}
+h1{font-size:28px;letter-spacing:-.02em;margin:8px 0 6px}h2{font-size:18px;margin:0 0 10px;display:flex;gap:10px;align-items:center}
+h2 span{width:30px;height:30px;border-radius:10px;background:var(--soft);color:var(--accent);display:grid;place-items:center;font-size:15px;flex:none}
+.lead{color:var(--muted);margin:0 0 20px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:18px;margin-bottom:14px}
+ol{padding-left:22px;margin:0}li{margin:6px 0}
+code,.pw{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13.5px;background:var(--card-2);border:1px solid var(--line);border-radius:7px;padding:1px 6px}
+.pwbox{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:10px 0}.pw{font-size:16px;padding:8px 12px;font-weight:700}
+pre{background:var(--card-2);border:1px solid var(--line);border-radius:14px;padding:14px;overflow:auto;font-size:12px;max-height:260px;margin:10px 0 0}
+button{font:inherit;font-weight:650;border:0;border-radius:12px;padding:10px 16px;background:var(--accent);color:var(--on);cursor:pointer}
+button.ghost{background:var(--card-2);color:var(--text);border:1px solid var(--line)}
+.tip{background:var(--soft);border-radius:14px;padding:11px 14px;font-size:14px;margin-top:10px}
+.brand{display:flex;align-items:center;gap:10px;font-weight:750}.brand img{width:32px;height:32px;border-radius:10px}
+</style></head><body><main>
+<div class="brand"><img src="icon.svg" alt="">Nisba</div>
+<h1>Sync between two phones</h1>
+<p class="lead">Free, no credit card. Your budget is saved in <b>your own Google Drive</b>, protected by a password. Do this once, on a computer if possible (about 10 minutes). Only <b>one</b> person needs to do it. The other phone joins with a link.</p>
+
+<div class="card"><h2><span>1</span>Your sync password</h2>
+<p style="margin:0">We made a random password for you. It's already inside the script below. Write it down.</p>
+<div class="pwbox"><span class="pw" id="pw"></span><button class="ghost" id="newpw">New password</button></div></div>
+
+<div class="card"><h2><span>2</span>Create the Google script</h2><ol>
+<li>Open <a href="https://script.google.com" target="_blank" rel="noopener">script.google.com</a> and sign in. Click <b>New project</b>.</li>
+<li>Rename it (top left) to <b>Budget sync</b>.</li>
+<li>Delete everything in the editor, then copy the script below and paste it in:
+<div style="margin-top:8px"><button id="copy">Copy script</button> <span id="copied" class="tip" style="display:none;padding:6px 10px">Copied ✓</span></div>
+<pre id="code"></pre></li>
+<li>Click 💾 <b>Save</b>.</li>
+<li>In the menu next to <b>▷ Run</b> choose <b>authorize</b>, then click <b>Run</b> → <b>Review permissions</b> → your account.<div class="tip">If Google says <i>“Google hasn't verified this app”</i>: tap <b>Advanced</b> → <b>Go to Budget sync (unsafe)</b> → <b>Allow</b>. It's your own script, and it only touches your own Drive.</div></li>
+</ol></div>
+
+<div class="card"><h2><span>3</span>Publish it as a web app</h2><ol>
+<li><b>Deploy</b> → <b>New deployment</b> → click ⚙ → <b>Web app</b>.</li>
+<li>Execute as: <b>Me</b>. Who has access: <b>Anyone</b>. The password still protects your data.</li>
+<li>Click <b>Deploy</b> and copy the <b>Web app URL</b> (it ends in <code>/exec</code>).</li>
+</ol></div>
+
+<div class="card"><h2><span>4</span>Connect your phones</h2><ol>
+<li>In Nisba: <b>Settings → Sync between phones</b>. Paste the Web app URL and the password, then tap <b>Connect</b>.</li>
+<li>Tap <b>Copy link for the other phone</b> and send it to your partner (e.g. on WhatsApp).</li>
+<li>On their phone: install Nisba, open <b>Settings</b>, paste the link under <i>“Got a link from the other phone?”</i>, then tap <b>Connect with link</b>.</li>
+<li>On each phone, choose who it belongs to under <b>This phone belongs to</b>.</li>
+</ol><div class="tip">The link contains the password. Only send it to the person you share the budget with.</div></div>
+<p style="text-align:center"><a href="./">← Back to the app</a></p>
+</main>
+<script>
+const TEMPLATE = "/**\n * Budget app \u2013 free sync backend (Google Apps Script).\n * Stores your budget as a file in YOUR Google Drive. No payment, no credit card.\n * Setup: see SYNC-SETUP.md. Change SECRET below before deploying.\n */\nconst SECRET = 'CHANGE-ME-to-a-long-password';\nconst FILE_NAME = 'budget-app-data.json';\nconst BACKUP_FOLDER = 'Budget app backups';\n\nfunction doGet(e) {\n  if (!ok_(e && e.parameter && e.parameter.key)) return out_({ error: 'auth' });\n  return out_(read_());\n}\n\nfunction doPost(e) {\n  let body;\n  try { body = JSON.parse(e.postData.contents); } catch (err) { return out_({ error: 'bad request' }); }\n  if (!ok_(body.key)) return out_({ error: 'auth' });\n  const lock = LockService.getScriptLock();\n  lock.waitLock(20000);\n  try {\n    const cur = read_();\n    // Someone else saved since this phone last looked: send it back so the phone can merge.\n    if ((body.rev || 0) !== cur.rev) return out_({ conflict: true, rev: cur.rev, data: cur.data });\n    backup_(cur);\n    const rev = cur.rev + 1;\n    write_({ rev: rev, data: body.data });\n    return out_({ ok: true, rev: rev });\n  } finally {\n    lock.releaseLock();\n  }\n}\n\nfunction ok_(key) { return SECRET.indexOf('CHANGE-ME') !== 0 && key === SECRET; }\n\nfunction file_() {\n  const props = PropertiesService.getScriptProperties();\n  const id = props.getProperty('fileId');\n  if (id) { try { const f = DriveApp.getFileById(id); if (!f.isTrashed()) return f; } catch (e) {} }\n  return null;\n}\n\nfunction read_() {\n  const f = file_();\n  if (!f) return { rev: 0, data: null };\n  try { return JSON.parse(f.getBlob().getDataAsString()); } catch (e) { return { rev: 0, data: null }; }\n}\n\nfunction write_(obj) {\n  const txt = JSON.stringify(obj);\n  const f = file_();\n  if (f) f.setContent(txt);\n  else PropertiesService.getScriptProperties().setProperty('fileId', DriveApp.createFile(FILE_NAME, txt, 'application/json').getId());\n}\n\n// One backup copy per day in a \"Budget app backups\" folder in your Drive.\nfunction backup_(cur) {\n  if (!cur.data) return;\n  const props = PropertiesService.getScriptProperties();\n  const today = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'yyyy-MM-dd');\n  if (props.getProperty('lastBackup') === today) return;\n  const it = DriveApp.getFoldersByName(BACKUP_FOLDER);\n  const folder = it.hasNext() ? it.next() : DriveApp.createFolder(BACKUP_FOLDER);\n  folder.createFile('budget-' + today + '.json', JSON.stringify(cur.data), 'application/json');\n  props.setProperty('lastBackup', today);\n}\n\nfunction out_(obj) {\n  return ContentService.createTextOutput(JSON.stringify(obj)).setMimeType(ContentService.MimeType.JSON);\n}\n\n// Run this once from the editor (select \"authorize\" and press Run) to grant Drive access.\nfunction authorize() { DriveApp.getRootFolder(); Logger.log('OK \u2013 Drive access granted. Now Deploy \u2192 New deployment.'); }\n";
+const words = 'amber birch cedar delta ember fjord grove harbor island jasper kayak lotus maple nectar olive pepper quartz river saffron tulip velvet willow zephyr coral'.split(' ');
+const rnd = n => crypto.getRandomValues(new Uint32Array(1))[0] % n;
+function make() {
+  const pw = [0, 1, 2].map(() => words[rnd(words.length)]).join('-') + '-' + (1000 + rnd(9000));
+  document.getElementById('pw').textContent = pw;
+  document.getElementById('code').textContent = TEMPLATE.replace("'CHANGE-ME-to-a-long-password'", "'" + pw + "'");
+}
+make();
+document.getElementById('newpw').onclick = make;
+document.getElementById('copy').onclick = () => navigator.clipboard.writeText(document.getElementById('code').textContent).then(() => { const c = document.getElementById('copied'); c.style.display = 'inline-block'; setTimeout(() => c.style.display = 'none', 2000); });
+</script></body></html>

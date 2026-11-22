@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>How Splitting Works</title><link rel="icon" href="icon.svg"><link rel="stylesheet" href="vendor/fonts.css">
+<style>
+:root{color-scheme:light;--bg:#F5F6F8;--card:#FFFFFF;--text:#13203B;--muted:#5D6183;--line:#E1E3EE;--accent:#1E40AF}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){color-scheme:dark;--bg:#0B0D12;--card:#161931;--text:#ECEDF8;--muted:#A0A4C6;--line:#272B4A;--accent:#6F9BFF}}
+:root[data-theme="dark"]{color-scheme:dark;--bg:#0B0D12;--card:#161931;--text:#ECEDF8;--muted:#A0A4C6;--line:#272B4A;--accent:#6F9BFF}
+body{margin:0;background:var(--bg);color:var(--text);font:16px/1.6 "Instrument Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+main{max-width:720px;margin:0 auto;padding:28px 16px 60px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:6px 22px 16px}
+h1{font-size:28px;margin:10px 0 4px}h2{font-size:18px;margin:22px 0 6px}p,li{color:var(--text)}.muted{color:var(--muted)}a{color:var(--accent)}
+.ex{display:grid;grid-template-columns:1fr auto auto;gap:4px 18px;margin:8px 0 4px;font-variant-numeric:tabular-nums}
+.ex b{font-weight:600}.ex span:nth-child(3n+2),.ex span:nth-child(3n){text-align:right}
+.ex .h{color:var(--muted);font-size:14px}
+.tip{background:var(--bg);border-radius:12px;padding:10px 14px;margin:10px 0}
+</style></head><body><main>
+<h1>How splitting works</h1>
+<p class="muted">How Nisba shares a joint bill between two people. The example in every section uses the same couple and the same €1,000 rent.</p>
+<div class="card">
+<h2>The example</h2>
+<p><b>Alex</b> earns €2,600 a month and <b>Sara</b> earns €1,900. Together that's €4,500. Their rent is <b>€1,000</b>.</p>
+
+<h2>50/50</h2>
+<p>Each person pays the same share.</p>
+<div class="ex"><span class="h">&nbsp;</span><span class="h">Pays</span><span class="h">Left</span><b>Alex</b><span>€500</span><span>€2,100</span><b>Sara</b><span>€500</span><span>€1,400</span></div>
+<p class="muted">Simple, but the person who earns less feels it more.</p>
+
+<h2>By income</h2>
+<p>Each person pays the same <i>percentage</i> of the bill as their share of the household income. Alex earns 58% of the €4,500, so Alex pays 58% of the rent.</p>
+<div class="ex"><span class="h">&nbsp;</span><span class="h">Pays</span><span class="h">Left</span><b>Alex</b><span>€577.78</span><span>€2,022.22</span><b>Sara</b><span>€422.22</span><span>€1,477.78</span></div>
+<p class="muted">Fair when incomes differ: both give up the same part of what they earn.</p>
+
+<h2>Same left over</h2>
+<p>The person with more money left pays more, so that both end the month with the <b>same amount left</b>. Nisba looks at each person's income and their other expenses that month.</p>
+<div class="ex"><span class="h">&nbsp;</span><span class="h">Pays</span><span class="h">Left</span><b>Alex</b><span>€850</span><span>€1,750</span><b>Sara</b><span>€150</span><span>€1,750</span></div>
+<p class="muted">If the gap between you is bigger than the bill, the person with more pays the whole bill, and the other pays nothing.</p>
+
+<h2>Custom</h2>
+<p>Type a ratio, such as 2 and 1, or 60 and 40. With 2 and 1, Alex pays €666.67 and Sara pays €333.33.</p>
+
+<h2>Who paid, and settling up</h2>
+<p>Each expense also records <b>who paid</b> it at the till. If Alex pays the whole €1,000 rent but the split says Alex's share is €577.78, then Sara owes Alex €422.22.</p>
+<p>The <b>Joint</b> tab adds this up for every joint bill in the month and shows one line, such as “Sara owes you €422.22”. When the money has been sent, tap the button under <b>Settle up</b> to mark it as paid.</p>
+<div class="tip">You can mix methods: rent <i>by income</i>, groceries <i>50/50</i>, internet <i>same left over</i>. The Joint tab works out the totals for you.</div>
+
+<h2>Tips</h2>
+<ul>
+<li><b>By income</b> and <b>Same left over</b> need everyone's income for that month. Add each salary once and it repeats every month.</li>
+<li><b>My share</b> on the Home card counts only your part of each joint bill. <b>Everyone</b> counts the full amounts.</li>
+<li>To change the split of a bill, tap it and choose another method. Monthly bills change for every month.</li>
+</ul>
+</div>
+<p class="muted" style="text-align:center;margin-top:18px"><a href="./">Back to Nisba</a></p>
+</main></body></html>
